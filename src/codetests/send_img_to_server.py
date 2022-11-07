@@ -1,7 +1,8 @@
-import requests
-import json
 import base64
 import io
+import json
+
+import requests
 from PIL import Image
 
 URL = "http://localhost:5000/"
@@ -20,6 +21,6 @@ headers = {"Content-Type": "application/json"}
 data = {"hello": "world", "photo": encoded_image.decode()}
 # data = {"hello": "world", "photo": 123}
 
-x = requests.post(url=URL, data=json.dumps(data), headers=headers)
+x = requests.post(url=URL, data=json.dumps(data), headers=headers, timeout=10)
 print(x.content, x.status_code)
 # requests.post(url=URL, json=jsondata, headers=headers)
