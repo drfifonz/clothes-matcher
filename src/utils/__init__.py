@@ -1,3 +1,3 @@
-__all__ = ["argument_parser", "print_all_user_arguments"]
+__all__ = ["arguments_parser", "print_all_user_arguments"]
 
-from src.utils.argument_parser import argument_parser, print_all_user_arguments
+from .argument_parser import arguments_parser, print_all_user_arguments

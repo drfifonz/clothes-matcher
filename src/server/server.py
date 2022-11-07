@@ -19,8 +19,6 @@ app = Flask(__name__)
 def webhook():
     return "200"
 
-
-
 @app.route("/", methods=["POST"])
 def recive_post_image():
     try:
@@ -45,9 +43,6 @@ def recive_post_image():
                              "img_value_type": str(type(img_value)),
                              "img_value": str(img_value)}
         response_status = 406
-
-
-
 
     return app.response_class(response=json.dumps(response_messages), status=response_status, mimetype="application/json")
 
