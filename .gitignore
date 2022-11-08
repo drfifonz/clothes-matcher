@@ -3,3 +3,4 @@ __pycache__
 data/*
 !data/datasets
 src/test/*
+.env

@@ -6,14 +6,14 @@ Overview
 </center>
 
 This subfolder contains datasets  not included in repository. <br>
-You have to do it manualy.
+You have to download datasets manualy.
 
 ---
 
 Datasets
 ----
 
-Mostly used dataset is [DeepFasion](http://mmlab.ie.cuhk.edu.hk/projects/DeepFashion.html) database.
+Core used dataset is [DeepFasion](http://mmlab.ie.cuhk.edu.hk/projects/DeepFashion.html) database.
 
  File Organization
 
@@ -24,4 +24,3 @@ Mostly used dataset is [DeepFasion](http://mmlab.ie.cuhk.edu.hk/projects/DeepFas
 Downloads
 ----
 
-<!-- ---  -->
