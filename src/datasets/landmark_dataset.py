@@ -21,7 +21,7 @@ class LandmarkDataset(data.Dataset):  # needs to be change to inheritance from B
         pass
         # return len of img list
 
-    def __image_loader(self, image_path: str, image_scale: float = 1) -> Image.Image:
+    def _image_loader(self, image_path: str, image_scale: float = 1) -> Image.Image:
         """
         loading image by pillow and convert it to RGB
         """
