@@ -2,10 +2,21 @@ import pandas as pd
 
 
 class LandmarkUtils:
+
+    """
+    utils class for Landmark Decetion dataset
+    """
+
     def __init__(self, path: str) -> None:
         self.path = path
 
-    def get_file_list(self, running_mode: str) -> pd.DataFrame:  # TODO consider output as a list
+    def get_file_list(self, running_mode: str) -> pd.DataFrame:
+        """
+        gets file list for specified runnig mode.
+        Acceptable runnig modes: train / test / val
+        """
+
+        # TODO consider output as a list
 
         data = self.__load_evaluation_list(self.path)
 
@@ -23,7 +34,7 @@ class LandmarkUtils:
                 data = data[data["evaluation_status"] == running_mode]
 
                 return data["image_name"]
-            case other:
+            case _:
                 print("No accetable runnig mode for selecting dataset.")
 
     def __load_evaluation_list(self, path: str) -> pd.DataFrame:

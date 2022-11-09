@@ -3,11 +3,15 @@ import torch.utils.data as data
 import torchvision.transforms as transforms
 
 from PIL import Image
-
 from base_dataset import BaseDataset
 
 
-class LandmarkDataset(data.Dataset):  # needs to be change to inheritance from BaseDataset
+class LandmarkDataset(data.Dataset):
+    """
+    Dataset class for DeepFashion Landmark Detection Dataset #4
+    """
+
+    # needs to be change to inheritance from BaseDataset
     def __init__(self, root: str, transforms_list: list = None) -> None:
         if not transforms_list:
             raise ValueError("No tranforms_list")
