@@ -15,7 +15,7 @@ def arguments_parser():
 
     parser.add_argument("--type", type=str, default="train", help="[test/train]")
 
-    return parser.parse_args
+    return parser.parse_args()
 
 
 def print_all_user_arguments(arguments: argparse.Namespace) -> None:

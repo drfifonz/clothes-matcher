@@ -1,9 +1,13 @@
-import torch
+import os
+
 import torch.utils.data as data
 import torchvision.transforms as transforms
 
+# from base_dataset import BaseDataset
 from PIL import Image
-from base_dataset import BaseDataset
+
+import utils.config as cfg
+from utils.dataset_utils import LandmarkUtils
 
 
 class LandmarkDataset(data.Dataset):
@@ -12,18 +16,40 @@ class LandmarkDataset(data.Dataset):
     """
 
     # needs to be change to inheritance from BaseDataset
-    def __init__(self, root: str, transforms_list: list = None) -> None:
-        if not transforms_list:
-            raise ValueError("No tranforms_list")
+    def __init__(
+        self,
+        root: str,
+        runnig_mode: str,
+        transforms_list: list = None,
+    ) -> None:
+
+        self.transforms = transforms.Compose(transforms_list)
+
         self.root = root
-        self.transform = transforms.Compose(transforms_list)
+        self.running_mode = runnig_mode
+
+        self.utils = LandmarkUtils(os.path.join(cfg.LANDMARK_DATASET_PATH, cfg.LM_TYPE_PARTITION_FILE_PATH))
+
+        self.images = list(self.utils.get_file_list(self.running_mode))
 
     def __getitem__(self, index) -> dict:
-        return super().__getitem__(index)
+
+        image_path = os.path.join(cfg.LANDMARK_DATASET_PATH, self.images[index])
+
+        image_pil = self._image_loader(image_path=image_path, image_scale=1)
+
+        if self.transforms is None:
+            raise TypeError("Transforms list is not defined")
+
+        img = self.transforms(image_pil)
+
+        # TODO get bbox /joints/ landmarks list and return them
+
+        return img
 
     def __len__(self):
-        pass
         # return len of img list
+        return self.utils.get_file_list(self.running_mode).size
 
     def _image_loader(self, image_path: str, image_scale: float = 1) -> Image.Image:
         """
