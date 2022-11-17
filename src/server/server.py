@@ -2,11 +2,12 @@ import base64
 import io
 import json
 import os
-
 from flask import Flask, request
 from PIL import Image
+from utils.server_utils import ServerUtil
 
 IMAGE_KEY = "photo"
+RELATIVE_PATH = "data/image.jpg"
 
 app = Flask(__name__)
 
@@ -30,9 +31,11 @@ def receive_post_image():
         img_string = payload[IMAGE_KEY]
         img_bytes = base64.b64decode(img_string)
         img_pil = Image.open(io.BytesIO(img_bytes))
-        # img_pil.show()  # showing sended photo
+        img_pil.show()  # showing sended photo
+        # response_messages = {"response_message": "OK"}
+        server_util = ServerUtil()
+        response_messages = server_util.get_json_response(RELATIVE_PATH)
 
-        response_messages = {"response_message": "OK"}
         response_status = 200
     except TypeError:
         if request.is_json:
@@ -49,8 +52,6 @@ def receive_post_image():
 
     return app.response_class(
         response=json.dumps(response_messages), status=response_status, mimetype="application/json")
-
-
 
 
 if __name__ == "__main__":
