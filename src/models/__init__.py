@@ -1,10 +1,3 @@
-import torch.nn as nn
+__all__ = ["DetectionModel"]
 
-
-class BaseModel(nn.Module):
-    """
-    Base model class used to inheritance by specific ones
-    """
-
-    def __init__(self) -> None:
-        super().__init__()
+from detection_model import DetectionModel
