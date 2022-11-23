@@ -1,10 +1,6 @@
 import argparse
-
 from os import get_terminal_size
-
-RED = "\033[31m"
-GREEN = "\033[32m"
-RESET_COLOR = "\033[0;0m"
+from utils.config import RED, GREEN, RESET_COLOR
 
 
 def arguments_parser():

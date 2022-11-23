@@ -11,7 +11,7 @@ class BboxDetectionModel(nn.Module):
         self.base_model = base_model
         self.num_labels = num_labels
 
-        # TODO consider better name for regressor
+        # TODO consider other name for regressor
         # regressor is user for bounding box position
         self.regressor = nn.Sequential(
             nn.Linear(base_model.fc.in_features, 128),
@@ -25,14 +25,25 @@ class BboxDetectionModel(nn.Module):
             nn.Sigmoid(),
         )
 
-        # TODO implement classifier
+        # TODO consider other name for classifier
         # create output from convolution block
-        self.classifier = nn.Sequential()
+        self.classifier = nn.Sequential(
+            nn.Linear(base_model.fc.in_features, 512),
+            nn.ReLU(),
+            nn.Dropout(),
+            nn.Linear(512, 512),
+            nn.ReLU(),
+            nn.Dropout(),
+            nn.Linear(512, base_model.fc.in_features),
+        )
 
         self.base_model.fc = nn.Identity()
 
-    def forward(self, x):
-        features = self.base_model(x)
+    def forward(self, data):
+        """
+        pass inputs through base model
+        """
+        features = self.base_model(data)
         bboxes = self.regressor(features)
         classifier = self.classifier(features)
 
