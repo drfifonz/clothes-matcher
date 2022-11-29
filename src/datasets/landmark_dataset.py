@@ -6,7 +6,7 @@ import torchvision.transforms as transforms
 # from base_dataset import BaseDataset
 from PIL import Image
 
-import utils.config as cfg
+# import utils.config as cfg
 from utils.dataset_utils import LandmarkUtils
 
 
@@ -19,23 +19,23 @@ class LandmarkDataset(data.Dataset):
     def __init__(
         self,
         root: str,
-        runnig_mode: str,
+        runing_mode: str,
         transforms_list: list = None,
     ) -> None:
 
         self.transforms = transforms.Compose(transforms_list)
 
         self.root = root
-        self.running_mode = runnig_mode
+        self.runing_mode = runing_mode
 
-        self.utils = LandmarkUtils(cfg.LANDMARK_DATASET_PATH)
+        self.utils = LandmarkUtils(self.root)
 
-        self.images = list(self.utils.get_file_list(self.running_mode))
+        self.images = list(self.utils.get_file_list(self.runing_mode))
 
     def __getitem__(self, index) -> dict:
 
-        image_path = os.path.join(cfg.LANDMARK_DATASET_PATH, self.images[index])
-
+        image_path = os.path.join(self.root, self.images[index])
+        # print(image_path)
         image_pil = self._image_loader(image_path=image_path, image_scale=1)
 
         if self.transforms is None:
@@ -49,7 +49,7 @@ class LandmarkDataset(data.Dataset):
 
     def __len__(self):
         # return len of img list
-        return self.utils.get_file_list(self.running_mode).size
+        return self.utils.get_file_list(self.runing_mode).size
 
     def _image_loader(self, image_path: str, image_scale: float = 1) -> Image.Image:
         """

@@ -16,6 +16,7 @@ class LandmarkUtils:
         self.path = path
         self.type_path = os.path.join(self.path, cfg.LM_TYPE_PARTITION_FILE_PATH)
         self.bbox_path = os.path.join(self.path, cfg.LM_BBOX_FILE_PATH)
+        self.eval_path = os.path.join(self.path, cfg.LM_EVAL_FILE_PATH)
         self.landmarks_path = os.path.join(self.path, cfg.LM_LANDMARSKS_FILE_PATH)
 
     def get_file_list(self, running_mode: str) -> pd.DataFrame:
@@ -24,7 +25,7 @@ class LandmarkUtils:
         Acceptable runnig modes: train / test / val
         """
 
-        data = self.__load_evaluation_list(self.path)
+        data = self.__load_evaluation_list(self.eval_path)
 
         match running_mode:
             case "train":
@@ -69,17 +70,19 @@ class LandmarkUtils:
         return data
 
     def __load_bbox_list(self, path: str) -> pd.DataFrame:
-        with open(path, "r", encoding="utf-8") as file:
-            raw_data = file.read()
-            raw_data = raw_data.replace("  ", " ")
-            buffer_data = io.StringIO(raw_data)
+        buffer_data = self.__open_txt_file(path)
 
         return pd.read_csv(filepath_or_buffer=buffer_data, sep=" ", skiprows=[0])
 
     def __load_landmarks_list(self, path: str) -> pd.DataFrame:
+        buffer_data = self.__open_txt_file(path)
+
+        return pd.read_csv(filepath_or_buffer=buffer_data, sep=" ", skiprows=[0])
+
+    def __open_txt_file(self, path: str) -> io.StringIO:
+
         with open(path, "r", encoding="utf-8") as file:
             raw_data = file.read()
             raw_data = raw_data.replace("  ", " ")
             buffer_data = io.StringIO(raw_data)
-
-        return pd.read_csv(filepath_or_buffer=buffer_data, sep=" ", skiprows=[0])
+        return buffer_data
