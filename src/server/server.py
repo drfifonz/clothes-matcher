@@ -1,9 +1,10 @@
 import base64
 import io
 import json
-import os
+import sys,os
 from flask import Flask, request
 from PIL import Image
+sys.path.append("./src")
 from utils.server_utils import ServerUtil
 
 IMAGE_KEY = "photo"
