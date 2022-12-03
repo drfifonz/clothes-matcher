@@ -10,24 +10,24 @@ class ModelUtils:
     Utils class for models
     """
 
-    def __init__(self, model) -> None:
-        self.model = model
+    def __init__(self) -> None:
+        pass
 
-    def save_model(self, epochs, optimizer, criterion):
+    def save_model(self, model, epochs, optimizer, criterion):
         """
         save trained model
         """
         torch.save(
             {
                 "epochs": epochs,
-                "model_state_dict": self.model.state_dict(),
+                "model_state_dict": model.state_dict(),
                 "optimizer_state_dict": optimizer.state_dict(),
                 "loss": criterion,
             },
             os.path.join(cfg.SAVE_MODEL_PATH, f"model_e{epochs+1}.pth"),
         )
 
-    def build_model(self, pretrained: bool = True, gradation: bool = True):
+    def build_model(self, model, pretrained: bool = True, gradation: bool = True):
         """
         Building model with pretreined parameter and gradation info.
         """
@@ -40,10 +40,10 @@ class ModelUtils:
         else:
             print(f"{cfg.TERMINAL_INFO} Freezing all hiden layers.")
 
-        self.model = self.model(pretrained=pretrained)
-        for parameters in self.model.parameters():
+        model = model(pretrained=True)
+        for parameters in model.parameters():
             parameters.requires_grad = gradation
-        return self.model
+        return model
 
 
 class TrainTransforms:
