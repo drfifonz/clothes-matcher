@@ -6,6 +6,7 @@ class BboxDetectionModel(nn.Module):
     Bbox detection model class
     """
 
+    # TODO Bbox detection Model class needs to be refilled
     def __init__(self, base_model, num_labels: int) -> None:
         super().__init__()
         self.base_model = base_model

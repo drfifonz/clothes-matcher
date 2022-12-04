@@ -1,3 +1,3 @@
-__all__ = ["DetectionModel"]
+__all__ = ["BboxDetectionModel"]
 
-from detection_model import DetectionModel
+from .detection_model import BboxDetectionModel
