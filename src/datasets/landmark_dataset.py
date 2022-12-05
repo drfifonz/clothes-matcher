@@ -1,7 +1,6 @@
 import os
-
+import torch
 import torch.utils.data as data
-import torchvision.transforms as transforms
 
 # from base_dataset import BaseDataset
 from PIL import Image
@@ -20,32 +19,39 @@ class LandmarkDataset(data.Dataset):
         self,
         root: str,
         runing_mode: str,
+        device: str,
         transforms_list: list = None,
     ) -> None:
 
-        self.transforms = transforms.Compose(transforms_list)
+        self.transforms = transforms_list
+        # self.transforms = transforms.Compose(transforms_list)
 
         self.root = root
         self.runing_mode = runing_mode
-
+        self.device = device
         self.utils = LandmarkUtils(self.root)
 
         self.images = list(self.utils.get_file_list(self.runing_mode))
 
-    def __getitem__(self, index) -> dict:
-
+    def __getitem__(self, idx) -> tuple:
+        index = idx % len(self.images)
         image_path = os.path.join(self.root, self.images[index])
         # print(image_path)
         image_pil = self._image_loader(image_path=image_path, image_scale=1)
 
+        bbox = self.utils.get_bbox_position(self.images[index])
+        label = self.utils.get_label_type(self.images[index])
+
+        bbox = torch.tensor(bbox, device=self.device)
+        label = torch.tensor(label, device=self.device)
+
+        # print("inside ok")
         if self.transforms is None:
             raise TypeError("Transforms list is not defined")
+        else:
+            img = self.transforms(image_pil)
 
-        img = self.transforms(image_pil)
-
-        # TODO get bbox /joints/ landmarks list and return them
-
-        return img
+        return img, label, bbox
 
     def __len__(self):
         # return len of img list

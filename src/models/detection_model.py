@@ -35,7 +35,7 @@ class BboxDetectionModel(nn.Module):
             nn.Linear(512, 512),
             nn.ReLU(),
             nn.Dropout(),
-            nn.Linear(512, base_model.fc.in_features),
+            nn.Linear(512, self.num_labels),
         )
 
         self.base_model.fc = nn.Identity()

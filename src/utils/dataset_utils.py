@@ -1,6 +1,7 @@
 import io
 import os
 
+import numpy as np
 import pandas as pd
 
 import utils.config as cfg
@@ -55,14 +56,24 @@ class LandmarkUtils:
 
         return bbox_position
 
-    def get_landmarks(self, image_name: str) -> list:
+    def get_landmarks(self, image_name: str) -> pd.DataFrame:
         """
         Gets landmarsk position data
         """
 
         lm_list = self.__load_landmarks_list(self.landmarks_path)
         image_data = lm_list[lm_list["image_name"] == image_name]
+
         return image_data
+
+    def get_label_type(self, image_name: str) -> np.int64:
+        """
+        gets label value for image, return as numpy int 32
+        """
+
+        return self.get_landmarks(image_name).iloc[0][["clothes_type"]][
+            0
+        ]  # last 0 is for unpacking from pd.DataFrame to np.int64
 
     def __load_evaluation_list(self, path: str) -> pd.DataFrame:
         data = pd.read_csv(path, sep=" ", skiprows=[0, 1], names=["image_name", "evaluation_status"])

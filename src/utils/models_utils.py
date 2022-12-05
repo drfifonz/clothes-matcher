@@ -1,7 +1,7 @@
 import os
 import torch
 from torchvision.transforms import transforms
-from PIL import Image
+
 import utils.config as cfg
 
 
@@ -57,6 +57,7 @@ class TrainTransforms:
             transformation_list.append(transforms.Resize(resize_size))
 
         transformation_list += [
+            # transforms.ToPILImage(),
             transforms.RandomHorizontalFlip(),
             transforms.RandomVerticalFlip(),
             transforms.ToTensor(),
@@ -64,10 +65,9 @@ class TrainTransforms:
         ]
 
         self.transforms = transforms.Compose(transformation_list)
-        print(self.transforms)
 
-    def __call__(self, img: Image):
-        return self.transforms(img=img)
+    def __call__(self, img):
+        return self.transforms(img)
 
 
 class ValidTransforms:
@@ -90,5 +90,5 @@ class ValidTransforms:
         self.transforms = transforms.Compose(transformation_list)
         print(self.transforms)
 
-    def __call__(self, img: Image):
-        return self.transforms(img=img)
+    def __call__(self, img):
+        return self.transforms(img)
