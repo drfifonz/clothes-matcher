@@ -40,17 +40,19 @@ class LandmarkDataset(data.Dataset):
         image_pil = self._image_loader(image_path=image_path, image_scale=1)
 
         bbox = self.utils.get_bbox_position(self.images[index])
-        label = self.utils.get_label_type(self.images[index])
+        label = (
+            self.utils.get_label_type(self.images[index]) - 1
+        )  # Labels are numbered in range 1-3, loss func except range 0 - (N-1)
 
         bbox = torch.tensor(bbox, device=self.device)
         label = torch.tensor(label, device=self.device)
 
-        # print("inside ok")
         if self.transforms is None:
             raise TypeError("Transforms list is not defined")
         else:
             img = self.transforms(image_pil)
 
+        # print(self.images[index])
         return img, label, bbox
 
     def __len__(self):
