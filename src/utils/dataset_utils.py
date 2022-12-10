@@ -3,6 +3,7 @@ import os
 
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 import utils.config as cfg
 
@@ -97,3 +98,15 @@ class LandmarkUtils:
             raw_data = raw_data.replace("  ", " ")
             buffer_data = io.StringIO(raw_data)
         return buffer_data
+
+    def image_loader(self, image_path: str, image_scale: float = 1) -> Image.Image:
+        """
+        loading image by pillow and convert it to RGB
+        """
+        # https://github.com/python-pillow/Pillow/issues/835
+
+        image = Image.open(image_path)
+        width, height = image.size
+        newsize = (int(width * image_scale), int(height * image_scale))
+
+        return image.resize(newsize).convert("RGB")
