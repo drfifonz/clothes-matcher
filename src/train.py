@@ -16,13 +16,13 @@ from utils.models_utils import ModelUtils, TrainTransforms
 # MEAN, STD and RESIZE_SIZE declaration
 MEAN = [0.485, 0.456, 0.406]
 STD = [0.229, 0.224, 0.225]
-RESIZE_SIZE = (400, 300)
+RESIZE_SIZE = (200, 100)
 BBOX_WEIGHT = 1.0
 LABEL_WEIGHT = 1.0
 
 INITIAL_LR = 1e-4
 NUM_EPOCHS = 20
-BATCH_SIZE = 64
+BATCH_SIZE = 4
 
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -35,7 +35,9 @@ tf_list = TrainTransforms(mean=MEAN, std=STD, resize_size=RESIZE_SIZE)
 dataset = LandmarkDataset(
     root="./" + cfg.LANDMARK_DATASET_PATH, runing_mode="train", device="cpu", transforms_list=tf_list
 )
-train_dataloader = DataLoader(dataset=dataset, batch_size=BATCH_SIZE, num_workers=os.cpu_count(), pin_memory=PIN_MEMORY)
+train_dataloader = DataLoader(
+    dataset=dataset, shuffle=True, batch_size=BATCH_SIZE, num_workers=os.cpu_count(), pin_memory=PIN_MEMORY
+)
 
 
 resnet_utils = ModelUtils()
@@ -70,7 +72,9 @@ for epoch in tqdm(range(NUM_EPOCHS)):
     train_correct = 0
     valid_correct = 0
     i = 0
+    loading_time_start = time.time()
     for (image, label, bbox) in train_dataloader:
+        it_time_start = time.time()
 
         image = image.to(DEVICE)
         label = label.to(DEVICE)
@@ -90,8 +94,14 @@ for epoch in tqdm(range(NUM_EPOCHS)):
         train_correct += (predictions[1].argmax(1) == label).type(torch.float).sum().item()
 
         i += 1
+        it_time_end = time.time()
         if i % 10 == 0:
-            print(i, end="\r")
+            measured_time = it_time_end - it_time_start
+            loading_time = it_time_end - loading_time_start
+            print(
+                f"iterations: {i}\t time per it: {measured_time:.2f}\t loading time per it: {(loading_time/i):.2f}",
+                end="\r",
+            )
 
     print(end="\x1b[2K")
     # TODO valid loop

@@ -37,7 +37,7 @@ class LandmarkDataset(data.Dataset):
         index = idx % len(self.images)
         image_path = os.path.join(self.root, self.images[index])
         # print(image_path)
-        image_pil = self._image_loader(image_path=image_path, image_scale=1)
+        image_pil = self._image_loader(image_path=image_path, image_scale=0.5)
 
         bbox = self.utils.get_bbox_position(self.images[index])
         label = (
@@ -47,10 +47,10 @@ class LandmarkDataset(data.Dataset):
         bbox = torch.tensor(bbox, device=self.device)
         label = torch.tensor(label, device=self.device)
 
-        if self.transforms is None:
-            raise TypeError("Transforms list is not defined")
-        else:
-            img = self.transforms(image_pil)
+        # if self.transforms is None:
+        #     raise TypeError("Transforms list is not defined")
+        # else:
+        img = self.transforms(image_pil)
 
         # print(self.images[index])
         return img, label, bbox
