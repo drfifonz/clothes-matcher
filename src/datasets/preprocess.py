@@ -67,25 +67,27 @@ class Preprocess:
 
             torch.save(img_tensor, img_tensor_path)
 
-    def refactor_landmarks_file(self, landmarks_file_path, as_tensors: bool = False) -> None:
+    def refactor_images_name_in_file(self, file_path: str, as_tensors: bool = False) -> None:
         """
-        Refactor list_landmarks.txt file by changing image's file name
+        Refactor list_landmarks.txt list_eval_partition file by changing image's file name
         """
-        # TODO implement refactor_landmarks_method
-        pass
+
+        list_lines = self.__open_txt_file(file_path).split("\n")
+        for index, line in enumerate(list_lines[2:]):
+
+            line = line.replace("img/", f"img_{self.scale}/")
+            if as_tensors:
+                line = line.replace(".jpg", ".pt")
+            list_lines[2 + index] = line
+
+        text = "\n".join(list_lines)
+        self.__save_txt_file(self.__refactor_file_path(file_path, as_tensors), text)
 
     def refactor_bbox_file(self, bbox_file_path: str, as_tensors: bool = False) -> None:
         """
         Refactor list_bbox.txt file by changing image's file name and calculating bbox by scale
         """
 
-        file_root_path, full_file_name = os.path.split(bbox_file_path)
-        file_name, ext = os.path.splitext(full_file_name)
-
-        file_name += f"_{self.scale}"
-        if as_tensors:
-            file_name += "_tensors"
-        print(file_name)
         list_lines = self.__open_txt_file(bbox_file_path).split("\n")
         for index, line in enumerate(list_lines[2:]):
 
@@ -103,7 +105,7 @@ class Preprocess:
 
         text = "\n".join(list_lines)
 
-        self.__save_txt_file(os.path.join(file_root_path, file_name + ext), text)
+        self.__save_txt_file(self.__refactor_file_path(bbox_file_path, as_tensors), text)
 
     def __open_txt_file(self, path: str) -> str:
         with open(path, "r", encoding="utf-8") as file:
@@ -117,18 +119,33 @@ class Preprocess:
         if not os.path.exists(path):
             os.mkdir(path)
 
+    def __refactor_file_path(self, path: str, as_tensors: bool) -> str:
+        file_root_path, full_file_name = os.path.split(path)
+        file_name, ext = os.path.splitext(full_file_name)
+
+        file_name += f"_{self.scale}"
+        if as_tensors:
+            file_name += "_tensors"
+        return os.path.join(file_root_path, file_name + ext)
+
 
 if __name__ == "__main__":
 
     SCALE = 0.5
 
     BBOX_PATH = "data/datasets/Deepfashion_Landmark/Anno/list_bbox.txt"
+    EVAL_PATH = "data/datasets/Deepfashion_Landmark/Eval/list_eval_partition.txt"
+    LANDMARK_PATH = "data/datasets/Deepfashion_Landmark/Anno/list_landmarks.txt"
 
     lm_dataset_path = os.path.join(cfg.LANDMARK_DATASET_PATH, cfg.LM_IMGS_DIR_PATH)
     preprocess = Preprocess(lm_dataset_path, SCALE)
 
     # preprocess.save_resized_imgs(SCALE)
 
-    preprocess.refactor_bbox_file(BBOX_PATH, True)
+    # preprocess.refactor_bbox_file(BBOX_PATH, True)
+    preprocess.refactor_images_name_in_file(EVAL_PATH, False)
+    preprocess.refactor_images_name_in_file(EVAL_PATH, True)
+    preprocess.refactor_images_name_in_file(LANDMARK_PATH, False)
+    preprocess.refactor_images_name_in_file(LANDMARK_PATH, True)
     # preprocess.save_imgs_as_tensors("img_0.5")
     # preprocess.save_imgs_as_tensors()
