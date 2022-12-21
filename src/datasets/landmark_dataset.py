@@ -1,4 +1,5 @@
 import os
+import time
 import torch
 import torch.utils.data as data
 
@@ -21,23 +22,32 @@ class LandmarkDataset(data.Dataset):
         runing_mode: str,
         device: str,
         transforms_list: list = None,
+        other_dir_name: str = None,
+        load_as_tensors: bool = False,
+        measure_time: bool = False,
     ) -> None:
 
         self.transforms = transforms_list
-        # self.transforms = transforms.Compose(transforms_list)
-
         self.root = root
         self.runing_mode = runing_mode
         self.device = device
-        self.utils = LandmarkUtils(self.root)
+        self.load_as_tensors = load_as_tensors
+        self.measure_time = measure_time
+
+        self.utils = LandmarkUtils(self.root, other_dir_name)
 
         self.images = list(self.utils.get_file_list(self.runing_mode))
+        self.scale = self.utils.get_scale_from_dir_name(other_dir_name)
 
     def __getitem__(self, idx) -> tuple:
+        start_time = time.time()
         index = idx % len(self.images)
-        image_path = os.path.join(self.root, self.images[index])
-        # print(image_path)
-        image_pil = self._image_loader(image_path=image_path, image_scale=0.5)
+        image_file_path = os.path.join(self.root, self.images[index])
+
+        if self.load_as_tensors:
+            loaded_images = torch.load(image_file_path)
+        else:
+            loaded_images = self._image_loader(image_path=image_file_path, image_scale=1)
 
         bbox = self.utils.get_bbox_position(self.images[index])
         label = (
@@ -47,12 +57,11 @@ class LandmarkDataset(data.Dataset):
         bbox = torch.tensor(bbox, device=self.device)
         label = torch.tensor(label, device=self.device)
 
-        # if self.transforms is None:
-        #     raise TypeError("Transforms list is not defined")
-        # else:
-        img = self.transforms(image_pil)
+        img = self.transforms(loaded_images)
 
-        # print(self.images[index])
+        end_time = time.time()
+        if self.measure_time:
+            print(f"__getitem__ time  {(end_time-start_time):.2f}")
         return img, label, bbox
 
     def __len__(self):

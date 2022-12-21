@@ -14,12 +14,28 @@ class LandmarkUtils:
     utils class for Landmark Decetion dataset
     """
 
-    def __init__(self, path: str) -> None:
+    def __init__(self, path: str, other_dir_name: str = None) -> None:
         self.path = path
-        self.type_path = os.path.join(self.path, cfg.LM_TYPE_PARTITION_FILE_PATH)
-        self.bbox_path = os.path.join(self.path, cfg.LM_BBOX_FILE_PATH)
-        self.eval_path = os.path.join(self.path, cfg.LM_EVAL_FILE_PATH)
-        self.landmarks_path = os.path.join(self.path, cfg.LM_LANDMARSKS_FILE_PATH)
+
+        if other_dir_name == "img_0.5":
+            self.bbox_file = cfg.LM_BBOX_FILE_PATH_05
+            self.eval_file = cfg.LM_EVAL_FILE_PATH_05
+            self.landmarks_file = cfg.LM_LANDMARSKS_FILE_PATH_05
+
+        elif other_dir_name == "img_0.5_tensors":
+            self.bbox_file = cfg.LM_BBOX_FILE_PATH_05_TENSORS
+            self.eval_file = cfg.LM_EVAL_FILE_PATH_05_TENSORS
+            self.landmarks_file = cfg.LM_LANDMARSKS_FILE_PATH_05_TENSORS
+
+        else:
+            self.bbox_file = cfg.LM_BBOX_FILE_PATH
+            self.eval_file = cfg.LM_EVAL_FILE_PATH
+            self.landmarks_file = cfg.LM_LANDMARSKS_FILE_PATH
+
+        # self.type_path = os.path.join(self.path, cfg.LM_TYPE_PARTITION_FILE_PATH)
+        self.bbox_path = os.path.join(self.path, self.bbox_file)
+        self.eval_path = os.path.join(self.path, self.eval_file)
+        self.landmarks_path = os.path.join(self.path, self.landmarks_file)
 
     def get_file_list(self, running_mode: str) -> pd.DataFrame:
         """
@@ -33,18 +49,18 @@ class LandmarkUtils:
             case "train":
                 data = data[data["evaluation_status"] == running_mode]
 
-                return data["image_name"]
-
             case "test":
                 data = data[data["evaluation_status"] == running_mode]
-
-                return data["image_name"]
             case "val":
                 data = data[data["evaluation_status"] == running_mode]
-
-                return data["image_name"]
             case _:
                 print("No accetable runnig mode for selecting dataset.")
+        # if another_dir:
+        #     data["image_name"] = data["image_name"].apply(self.__change_dir_in_path, args=(another_dir,))
+        # if as_tensor:
+        #     data["image_name"] = data["image_name"].apply(self.__change_jpg_extension, args=(".pt",))
+
+        return data["image_name"]
 
     def get_bbox_position(self, image_name: str) -> list:
         """
@@ -110,3 +126,15 @@ class LandmarkUtils:
         newsize = (int(width * image_scale), int(height * image_scale))
 
         return image.resize(newsize).convert("RGB")
+
+    def get_scale_from_dir_name(self, dir_name: str) -> float:
+        """
+        parse directory name to get scale of saved images
+        """
+        if not dir_name:
+            return 1
+        splitted_name = dir_name.split("_")
+        try:
+            float(splitted_name[1])
+        except ValueError:
+            print("There is no scale in directory name")
