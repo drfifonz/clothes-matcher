@@ -75,9 +75,11 @@ class Preprocess:
         list_lines = self.__open_txt_file(file_path).split("\n")
         for index, line in enumerate(list_lines[2:]):
 
-            line = line.replace("img/", f"img_{self.scale}/")
             if as_tensors:
+                line = line.replace("img/", f"img_{self.scale}_tensors/")
                 line = line.replace(".jpg", ".pt")
+            else:
+                line = line.replace("img/", f"img_{self.scale}/")
             list_lines[2 + index] = line
 
         text = "\n".join(list_lines)
@@ -91,10 +93,11 @@ class Preprocess:
         list_lines = self.__open_txt_file(bbox_file_path).split("\n")
         for index, line in enumerate(list_lines[2:]):
 
-            line = line.replace("img/", f"img_{self.scale}/")
             if as_tensors:
-
+                line = line.replace("img/", f"img_{self.scale}_tensors/")
                 line = line.replace(".jpg", ".pt")
+            else:
+                line = line.replace("img/", f"img_{self.scale}/")
 
             list_line = line.split(" ")
 
@@ -142,10 +145,12 @@ if __name__ == "__main__":
 
     # preprocess.save_resized_imgs(SCALE)
 
-    # preprocess.refactor_bbox_file(BBOX_PATH, True)
-    preprocess.refactor_images_name_in_file(EVAL_PATH, False)
+    preprocess.refactor_bbox_file(BBOX_PATH, True)
+    # preprocess.refactor_images_name_in_file(EVAL_PATH, False)
     preprocess.refactor_images_name_in_file(EVAL_PATH, True)
-    preprocess.refactor_images_name_in_file(LANDMARK_PATH, False)
+    # preprocess.refactor_images_name_in_file(LANDMARK_PATH, False)
     preprocess.refactor_images_name_in_file(LANDMARK_PATH, True)
     # preprocess.save_imgs_as_tensors("img_0.5")
     # preprocess.save_imgs_as_tensors()
+
+# /home/filippatyk/projects/python/clothes-matcher/data/datasets/Deepfashion_Landmark/Anno/list_bbox_0.5.txt
