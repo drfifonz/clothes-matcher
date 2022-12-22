@@ -48,13 +48,13 @@ class LandmarkUtils:
         match running_mode:
             case "train":
                 data = data[data["evaluation_status"] == running_mode]
-
             case "test":
                 data = data[data["evaluation_status"] == running_mode]
             case "val":
                 data = data[data["evaluation_status"] == running_mode]
             case _:
                 print("No accetable runnig mode for selecting dataset.")
+
         # if another_dir:
         #     data["image_name"] = data["image_name"].apply(self.__change_dir_in_path, args=(another_dir,))
         # if as_tensor:

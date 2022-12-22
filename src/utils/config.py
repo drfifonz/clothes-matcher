@@ -20,7 +20,6 @@ LM_EVAL_FILE_PATH_05_TENSORS = "Eval/list_eval_partition_0.5_tensors.txt"
 LM_IMGS_DIR_PATH_05_TENSORS = "img_0.5_tensors"
 
 
-
 SAVE_MODEL_PATH = "data/results"
 
 # terminal output colors
