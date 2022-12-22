@@ -9,6 +9,7 @@ from tqdm import tqdm
 
 import utils.config as cfg
 from datasets.landmark_dataset import LandmarkDataset
+from datasets.lm_hdf5_dataset import LandmarkHDF5Dataset
 from models.detection_model import BboxDetectionModel
 from utils.models_utils import ModelUtils, TrainTransforms
 
@@ -16,15 +17,16 @@ from utils.models_utils import ModelUtils, TrainTransforms
 # MEAN, STD and RESIZE_SIZE declaration
 MEAN = [0.485, 0.456, 0.406]
 STD = [0.229, 0.224, 0.225]
-RESIZE_SIZE = (100, 50)
+RESIZE_SIZE = (200, 200)
 BBOX_WEIGHT = 1.0
 LABEL_WEIGHT = 1.0
 
 INITIAL_LR = 1e-4
 NUM_EPOCHS = 20
-BATCH_SIZE = 4
+BATCH_SIZE = 32
 
 AS_TENSOR = False
+DEBUG_MODE = False
 
 NUM_WORKERS = 8
 # NUM_WORKERS = os.cpu_count()
@@ -35,18 +37,26 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 PIN_MEMORY = True if DEVICE == "cuda" else False  # to speed up loading data on CPU to training it on GPU
 # see https://discuss.pytorch.org/t/when-to-set-pin-memory-to-true/19723
 
-tf_list = TrainTransforms(mean=MEAN, std=STD, resize_size=RESIZE_SIZE, as_tensor=AS_TENSOR)
+tf_list = TrainTransforms(mean=MEAN, std=STD, as_hdf5=True)
 
-
-dataset = LandmarkDataset(
-    root="./" + cfg.LANDMARK_DATASET_PATH,
-    runing_mode="train",
-    device="cpu",
+dataset = LandmarkHDF5Dataset(
+    root=cfg.HDF5_DIR_PATH,
+    running_mode="train",
     transforms_list=tf_list,
-    other_dir_name=None,
-    load_as_tensors=AS_TENSOR,
-    measure_time=False,
+    measure_time=True,
 )
+
+# tf_list = TrainTransforms(mean=MEAN, std=STD, resize_size=RESIZE_SIZE, as_tensor=AS_TENSOR)
+
+# dataset = LandmarkDataset(
+#     root="./" + cfg.LANDMARK_DATASET_PATH,
+#     runing_mode="train",
+#     device="cpu",
+#     transforms_list=tf_list,
+#     other_dir_name=None,
+#     load_as_tensors=AS_TENSOR,
+#     measure_time=False,
+# )
 
 train_dataloader = DataLoader(
     dataset=dataset, shuffle=True, batch_size=BATCH_SIZE, num_workers=NUM_WORKERS, pin_memory=PIN_MEMORY
@@ -86,6 +96,7 @@ for epoch in tqdm(range(NUM_EPOCHS)):
     valid_correct = 0
     i = 0
     loading_time_start = time.time()
+
     for (image, label, bbox) in train_dataloader:
 
         it_time_start = time.time()
@@ -93,9 +104,10 @@ for epoch in tqdm(range(NUM_EPOCHS)):
         image = image.to(DEVICE)
         label = label.to(DEVICE)
         bbox = bbox.to(DEVICE)
-        # raise
+
         predictions = detector_model(image)
         bbox_loss = bbox_loss_func(predictions[0], bbox.float())
+
         classificator_loss = classificator_loss_func(predictions[1], label)
 
         total_loss = bbox_loss + classificator_loss
@@ -109,14 +121,14 @@ for epoch in tqdm(range(NUM_EPOCHS)):
 
         i += 1
         it_time_end = time.time()
-        if i % 10 == 0:
+        if i % 10 == 0 and DEBUG_MODE:
             measured_time = it_time_end - it_time_start
             loading_time = it_time_end - loading_time_start
             print(
                 f"iterations: {i}\t time in it: {measured_time:.2f}\t loading time per it: {(loading_time/i):.2f}",
                 end="\r",
             )
-
-    print(end="\x1b[2K")
+    if DEBUG_MODE:
+        print(end="\x1b[2K")
 
     # TODO valid loop

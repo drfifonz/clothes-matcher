@@ -152,5 +152,3 @@ if __name__ == "__main__":
     preprocess.refactor_images_name_in_file(LANDMARK_PATH, True)
     # preprocess.save_imgs_as_tensors("img_0.5")
     # preprocess.save_imgs_as_tensors()
-
-# /home/filippatyk/projects/python/clothes-matcher/data/datasets/Deepfashion_Landmark/Anno/list_bbox_0.5.txt
