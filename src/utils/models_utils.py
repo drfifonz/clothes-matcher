@@ -51,18 +51,27 @@ class TrainTransforms:
     Transforms class for train dataset
     """
 
-    def __init__(self, mean: tuple, std: tuple, resize_size: tuple[int] = None, as_tensor: bool = False) -> None:
+    def __init__(
+        self, mean: tuple, std: tuple, resize_size: tuple[int] = None, as_tensor: bool = False, as_hdf5: bool = False
+    ) -> None:
         transformation_list = []
-        if resize_size:
-            transformation_list.append(transforms.Resize(resize_size))
+        if as_hdf5:
+            transformation_list += [
+                transforms.RandomHorizontalFlip(),
+                transforms.RandomVerticalFlip(),
+            ]
+        else:
 
-        transformation_list += [
-            # transforms.ToPILImage(),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomVerticalFlip(),
-        ]
-        if not as_tensor:
-            transformation_list.append(transforms.ToTensor())
+            if resize_size:
+                transformation_list.append(transforms.Resize(resize_size))
+
+            transformation_list += [
+                # transforms.ToPILImage(),
+                transforms.RandomHorizontalFlip(),
+                transforms.RandomVerticalFlip(),
+            ]
+            if not as_tensor:
+                transformation_list.append(transforms.ToTensor())
 
         transformation_list.append(transforms.Normalize(mean=mean, std=std))
 
@@ -77,7 +86,7 @@ class ValidTransforms:
     Transforms class for validation dataset
     """
 
-    def __init__(self, mean: tuple, std: tuple, resize_size: tuple[int] = None, as_tensor: bool = False) -> None:
+    def __init__(self, mean: tuple, std: tuple, resize_size: tuple[int] = None) -> None:
         transformation_list = []
         if resize_size:
             transformation_list.append(transforms.Resize(resize_size))

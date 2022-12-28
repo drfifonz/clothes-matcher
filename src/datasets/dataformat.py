@@ -135,7 +135,8 @@ if __name__ == "__main__":
     df = Dataformatter(path=IMG_DIR_PATH, lmdb_path=LMDB_DIR_PATH, hdf5_path=HDF5_DIR_PATH)
 
     # df.__get_images_data("train")
-    df.store_images_hdf5("train")
-
-    # lmdb_dir = Path("data/lmdb/")
-    # lmdb_dir.mkdir(parents=True, exist_ok=True)
+    # df.store_images_hdf5("train")
+    print("DATASET TYPE:\t\t val")
+    df.store_images_hdf5("val")
+    print("DATASET TYPE:\t\t test")
+    df.store_images_hdf5("test")

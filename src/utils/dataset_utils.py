@@ -1,6 +1,7 @@
 import io
 import os
 
+import h5py
 import numpy as np
 import pandas as pd
 from PIL import Image
@@ -54,11 +55,6 @@ class LandmarkUtils:
                 data = data[data["evaluation_status"] == running_mode]
             case _:
                 print("No accetable runnig mode for selecting dataset.")
-
-        # if another_dir:
-        #     data["image_name"] = data["image_name"].apply(self.__change_dir_in_path, args=(another_dir,))
-        # if as_tensor:
-        #     data["image_name"] = data["image_name"].apply(self.__change_jpg_extension, args=(".pt",))
 
         return data["image_name"]
 
@@ -138,3 +134,25 @@ class LandmarkUtils:
             float(splitted_name[1])
         except ValueError:
             print("There is no scale in directory name")
+
+    def read_hdf5_dataset_file(self, file_path: str) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        read images, labels & bboxex and return it as tuple
+
+        Returns:
+        ---------------
+        images:      images np.ndarray size: (N, 200, 200, 3) \n
+        labels:      labels np.ndarray size: (N, 1)  \n
+        bboxes:        bboxes np.ndarraysize: (N, 4) \n
+
+        """
+        # images, labels, bboxes = [], [], []
+
+        # read  hdf5 file
+        file = h5py.File(file_path, "r+")
+
+        images = np.array(file["/images"])
+        labels = np.array(file["/labels"])
+        bboxes = np.array(file["/bboxes"])
+
+        return images, labels, bboxes

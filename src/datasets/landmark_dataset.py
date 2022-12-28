@@ -55,6 +55,7 @@ class LandmarkDataset(data.Dataset):
         )  # Labels are numbered in range 1-3, loss func except range 0 - (N-1)
 
         bbox = torch.tensor(bbox, device=self.device)
+        # print("BBOX size:", bbox.shape, "\t\tbbox:", bbox, bbox.dtype)
         label = torch.tensor(label, device=self.device)
 
         img = self.transforms(loaded_images)
@@ -72,7 +73,7 @@ class LandmarkDataset(data.Dataset):
         """
         loading image by pillow and convert it to RGB
         """
-        # https://github.com/python-pillow/Pillow/issues/835
+        # *  https://github.com/python-pillow/Pillow/issues/835
 
         image = Image.open(image_path)
         width, height = image.size

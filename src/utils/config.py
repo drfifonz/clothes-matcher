@@ -19,6 +19,8 @@ LM_LANDMARSKS_FILE_PATH_05_TENSORS = "Anno/list_landmarks_0.5_tensors.txt"
 LM_EVAL_FILE_PATH_05_TENSORS = "Eval/list_eval_partition_0.5_tensors.txt"
 LM_IMGS_DIR_PATH_05_TENSORS = "img_0.5_tensors"
 
+HDF5_TRAIN_FILE_PATH = "data/datasets/Deepfashion_Landmark/img_hdf5/images_train.h5"
+HDF5_DIR_PATH = "data/datasets/Deepfashion_Landmark/img_hdf5"
 
 SAVE_MODEL_PATH = "data/results"
 
