@@ -46,6 +46,7 @@ class LandmarkHDF5Dataset(data.Dataset):
         img: np.ndarray = self.images[index]
 
         img = img.reshape(3, 200, 200).astype("float32")
+        # img = np.array([img[2], img[0], img[1]]).astype("float32")
 
         image = torch.from_numpy(img)
         label = torch.from_numpy(self.labels[index] - 1)
@@ -62,7 +63,7 @@ class LandmarkHDF5Dataset(data.Dataset):
         stop_time = time.time()
         print(
             f"{cfg.TERMINAL_INFO} {Path(hdf5_file_path).name} file loaded",
-            f"in {(stop_time-start_time):.2f}s." if self.measure_time else ".",
+            f"in {(stop_time-start_time):.2f}s." if self.measure_time else "",
         )
         return dataset
 

@@ -136,7 +136,7 @@ if __name__ == "__main__":
 
     # df.__get_images_data("train")
     # df.store_images_hdf5("train")
-    print("DATASET TYPE:\t\t val")
-    df.store_images_hdf5("val")
+    # print("DATASET TYPE:\t\t val")
+    # df.store_images_hdf5("val")
     print("DATASET TYPE:\t\t test")
     df.store_images_hdf5("test")

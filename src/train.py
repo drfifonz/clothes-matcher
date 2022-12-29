@@ -23,7 +23,7 @@ LABEL_WEIGHT = 1.0
 
 INITIAL_LR = 1e-4
 NUM_EPOCHS = 20
-BATCH_SIZE = 32
+BATCH_SIZE = 64
 
 AS_TENSOR = False
 DEBUG_MODE = False
@@ -39,11 +39,17 @@ PIN_MEMORY = True if DEVICE == "cuda" else False  # to speed up loading data on 
 
 tf_list = TrainTransforms(mean=MEAN, std=STD, as_hdf5=True)
 
-dataset = LandmarkHDF5Dataset(
+train_dataset = LandmarkHDF5Dataset(
     root=cfg.HDF5_DIR_PATH,
     running_mode="train",
     transforms_list=tf_list,
-    measure_time=True,
+    measure_time=False,
+)
+val_dataset = LandmarkHDF5Dataset(
+    root=cfg.HDF5_DIR_PATH,
+    running_mode="val",
+    transforms_list=tf_list,
+    measure_time=False,
 )
 
 # tf_list = TrainTransforms(mean=MEAN, std=STD, resize_size=RESIZE_SIZE, as_tensor=AS_TENSOR)
@@ -59,10 +65,17 @@ dataset = LandmarkHDF5Dataset(
 # )
 
 train_dataloader = DataLoader(
-    dataset=dataset, shuffle=True, batch_size=BATCH_SIZE, num_workers=NUM_WORKERS, pin_memory=PIN_MEMORY
+    dataset=train_dataset, shuffle=True, batch_size=BATCH_SIZE, num_workers=NUM_WORKERS, pin_memory=PIN_MEMORY
 )
 
+val_dataloader = DataLoader(
+    dataset=val_dataset, shuffle=True, batch_size=BATCH_SIZE, num_workers=NUM_WORKERS, pin_memory=PIN_MEMORY
+)
 
+train_steps = len(train_dataset) // BATCH_SIZE
+val_steps = len(val_dataset) // BATCH_SIZE
+
+print(cfg.TERMINAL_INFO, f"Train photos:{len(train_dataset)}\tVal photos: {len(val_dataset)}")
 resnet_utils = ModelUtils()
 resnet_model = resnet_utils.build_model(model=resnet50, pretrained=True, gradation=False)
 
@@ -72,13 +85,13 @@ detector_model = BboxDetectionModel(resnet_model, 3)
 if torch.cuda.is_available():
     detector_model.cuda()
 
-# loss funcfion declaration
+# loss funcfion declaration (ctiterion)
 classificator_loss_func = nn.CrossEntropyLoss()
 bbox_loss_func = nn.MSELoss()
 # optimizer initialization
 optimizer = torch.optim.Adam(params=detector_model.parameters(), lr=INITIAL_LR)
 
-H = {"total_train_loss": [], "total_val_loss": [], "train_class_acc": [], "val_class_acc": []}
+progress = {"total_train_loss": [], "total_val_loss": [], "train_class_acc": [], "val_class_acc": []}
 
 
 print(f"{cfg.TERMINAL_INFO} start training loop...")
@@ -89,11 +102,11 @@ for epoch in tqdm(range(NUM_EPOCHS)):
 
     # initialization losses
     total_train_loss = 0
-    total_valid_loss = 0
+    total_val_loss = 0
 
     # initialization predictions num
-    train_correct = 0
-    valid_correct = 0
+    correct_train = 0
+    correct_val = 0
     i = 0
     loading_time_start = time.time()
 
@@ -106,18 +119,19 @@ for epoch in tqdm(range(NUM_EPOCHS)):
         bbox = bbox.to(DEVICE)
 
         predictions = detector_model(image)
-        bbox_loss = bbox_loss_func(predictions[0], bbox.float())
 
+        bbox_loss = bbox_loss_func(predictions[0], bbox.float())
         classificator_loss = classificator_loss_func(predictions[1], label)
 
-        total_loss = bbox_loss + classificator_loss
+        # total_loss = bbox_loss + classificator_loss
+        total_loss = classificator_loss
 
         optimizer.zero_grad()
         total_loss.backward()
         optimizer.step()
 
         total_train_loss += total_loss
-        train_correct += (predictions[1].argmax(1) == label).type(torch.float).sum().item()
+        correct_train += (predictions[1].argmax(1) == label).type(torch.float).sum().item()
 
         i += 1
         it_time_end = time.time()
@@ -131,4 +145,44 @@ for epoch in tqdm(range(NUM_EPOCHS)):
     if DEBUG_MODE:
         print(end="\x1b[2K")
 
-    # TODO valid loop
+    with torch.no_grad():
+        detector_model.eval()
+
+        for (image, label, bbox) in val_dataloader:
+
+            image = image.to(DEVICE)
+            label = label.to(DEVICE)
+            bbox = bbox.to(DEVICE)
+
+            predictions = detector_model(image)
+
+            bbox_loss = bbox_loss_func(predictions[0], bbox.float())
+            classificator_loss = classificator_loss_func(predictions[1], label)
+
+            # total_loss = bbox_loss + classificator_loss
+            total_loss = classificator_loss
+
+            total_val_loss += total_loss
+
+            correct_val += (predictions[1].argmax(1) == label).type(torch.float).sum().item()
+
+    avg_train_loss = total_train_loss / train_steps
+    avg_val_loss = total_val_loss / val_steps
+
+    correct_train = correct_train / len(train_dataset)
+    correct_val = correct_val / len(val_dataset)
+
+    # update training history
+    progress["total_train_loss"].append(avg_train_loss.cpu().detach().numpy())
+    progress["total_val_loss"].append(avg_val_loss.cpu().detach().numpy())
+    progress["train_class_acc"].append(correct_train)
+    progress["val_class_acc"].append(correct_val)
+
+    #!MODEL TRAINGING INFO
+
+    print(cfg.TERMINAL_INFO, f"EPOCH {epoch+1}/{NUM_EPOCHS}")
+    print(f"TRAIN loss: {avg_train_loss:.6f}, accuracy {correct_train:.4f}")
+    print(f"VALIDATION loss: {avg_val_loss:.6f}, accuracy {correct_val:.4f}")
+
+print(cfg.TERMINAL_INFO, "saving model")
+torch.save(detector_model, os.path.join(cfg.SAVE_MODEL_PATH, "detector_model.path"))
