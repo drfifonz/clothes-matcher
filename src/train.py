@@ -6,6 +6,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision.models import resnet50
 from tqdm import tqdm
+import wandb
 
 import utils.config as cfg
 from datasets.landmark_dataset import LandmarkDataset
@@ -23,19 +24,38 @@ LABEL_WEIGHT = 1.0
 
 INITIAL_LR = 1e-4
 NUM_EPOCHS = 20
-BATCH_SIZE = 64
-
-AS_TENSOR = False
-DEBUG_MODE = False
+BATCH_SIZE = 32
 
 NUM_WORKERS = 8
 # NUM_WORKERS = os.cpu_count()
 
+GRADATION = True
+
+AS_TENSOR = False
+DEBUG_MODE = False
+
+
+LOG_INTERVAL = 100 * 32 / BATCH_SIZE
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # DEVICE = "cpu"
 PIN_MEMORY = True if DEVICE == "cuda" else False  # to speed up loading data on CPU to training it on GPU
 # see https://discuss.pytorch.org/t/when-to-set-pin-memory-to-true/19723
+
+
+wandb.config = {
+    "learning_rate": INITIAL_LR,
+    "epochs": NUM_EPOCHS,
+    "batch_size": BATCH_SIZE,
+    "workers": NUM_WORKERS,
+    "gradation": GRADATION,
+    "pin_memory": PIN_MEMORY,
+    "mean": MEAN,
+    "std": STD,
+}
+
+wandb.init(project="clothes-matcher", entity="drfifonz", config=wandb.config)
+
 
 tf_list = TrainTransforms(mean=MEAN, std=STD, as_hdf5=True)
 
@@ -77,7 +97,7 @@ val_steps = len(val_dataset) // BATCH_SIZE
 
 print(cfg.TERMINAL_INFO, f"Train photos:{len(train_dataset)}\tVal photos: {len(val_dataset)}")
 resnet_utils = ModelUtils()
-resnet_model = resnet_utils.build_model(model=resnet50, pretrained=True, gradation=False)
+resnet_model = resnet_utils.build_model(model=resnet50, pretrained=True, gradation=GRADATION)
 
 # creating object dedector model
 detector_model = BboxDetectionModel(resnet_model, 3)
@@ -99,6 +119,7 @@ start_time = time.time()
 
 for epoch in tqdm(range(NUM_EPOCHS)):
     detector_model.train()
+    wandb.watch(detector_model)
 
     # initialization losses
     total_train_loss = 0
@@ -107,10 +128,9 @@ for epoch in tqdm(range(NUM_EPOCHS)):
     # initialization predictions num
     correct_train = 0
     correct_val = 0
-    i = 0
-    loading_time_start = time.time()
 
-    for (image, label, bbox) in train_dataloader:
+    loading_time_start = time.time()
+    for batch_idx, (image, label, bbox) in enumerate(train_dataloader):
 
         it_time_start = time.time()
 
@@ -127,19 +147,26 @@ for epoch in tqdm(range(NUM_EPOCHS)):
         total_loss = classificator_loss
 
         optimizer.zero_grad()
-        total_loss.backward()
-        optimizer.step()
 
         total_train_loss += total_loss
         correct_train += (predictions[1].argmax(1) == label).type(torch.float).sum().item()
 
-        i += 1
+        total_loss.backward()
+        optimizer.step()
+
+        if batch_idx % LOG_INTERVAL == 0:
+            wandb.log(
+                {
+                    "iterational_train_loss": total_train_loss,
+                    "iterational_train_accuracy": correct_train / len(train_dataset),
+                }
+            )
         it_time_end = time.time()
-        if i % 10 == 0 and DEBUG_MODE:
+        if batch_idx % 10 == 0 and DEBUG_MODE:
             measured_time = it_time_end - it_time_start
             loading_time = it_time_end - loading_time_start
             print(
-                f"iterations: {i}\t time in it: {measured_time:.2f}\t loading time per it: {(loading_time/i):.2f}",
+                f"it: {batch_idx}\t time in it: {measured_time:.2f}\t loading time per it: {(loading_time/batch_idx):.2f}",
                 end="\r",
             )
     if DEBUG_MODE:
@@ -148,7 +175,7 @@ for epoch in tqdm(range(NUM_EPOCHS)):
     with torch.no_grad():
         detector_model.eval()
 
-        for (image, label, bbox) in val_dataloader:
+        for batch_idx, (image, label, bbox) in enumerate(val_dataloader):
 
             image = image.to(DEVICE)
             label = label.to(DEVICE)
@@ -166,6 +193,14 @@ for epoch in tqdm(range(NUM_EPOCHS)):
 
             correct_val += (predictions[1].argmax(1) == label).type(torch.float).sum().item()
 
+            if batch_idx % LOG_INTERVAL == 0:
+                wandb.log(
+                    {
+                        "iterational_val_loss": total_val_loss,
+                        "iterational_val_accuracy": correct_val / len(val_dataset),
+                    }
+                )
+
     avg_train_loss = total_train_loss / train_steps
     avg_val_loss = total_val_loss / val_steps
 
@@ -177,12 +212,20 @@ for epoch in tqdm(range(NUM_EPOCHS)):
     progress["total_val_loss"].append(avg_val_loss.cpu().detach().numpy())
     progress["train_class_acc"].append(correct_train)
     progress["val_class_acc"].append(correct_val)
-
+    wandb.log(
+        {
+            "total_train_loss": progress["total_train_loss"][-1],
+            "total_val_loss": progress["total_val_loss"][-1],
+            "train_class_acc": progress["train_class_acc"][-1],
+            "val_class_acc": progress["val_class_acc"][-1],
+            "epoch": epoch,
+        }
+    )
     #!MODEL TRAINGING INFO
 
-    print(cfg.TERMINAL_INFO, f"EPOCH {epoch+1}/{NUM_EPOCHS}")
+    print("\n", cfg.TERMINAL_INFO, f"EPOCH {epoch+1}/{NUM_EPOCHS}")
     print(f"TRAIN loss: {avg_train_loss:.6f}, accuracy {correct_train:.4f}")
     print(f"VALIDATION loss: {avg_val_loss:.6f}, accuracy {correct_val:.4f}")
 
 print(cfg.TERMINAL_INFO, "saving model")
-torch.save(detector_model, os.path.join(cfg.SAVE_MODEL_PATH, "detector_model.path"))
+torch.save(detector_model, os.path.join(cfg.SAVE_MODEL_PATH, f"detector_model_{wandb.run.name}.path"))

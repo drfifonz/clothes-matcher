@@ -55,7 +55,6 @@ class LandmarkDataset(data.Dataset):
         )  # Labels are numbered in range 1-3, loss func except range 0 - (N-1)
 
         bbox = torch.tensor(bbox, device=self.device)
-        # print("BBOX size:", bbox.shape, "\t\tbbox:", bbox, bbox.dtype)
         label = torch.tensor(label, device=self.device)
 
         img = self.transforms(loaded_images)
