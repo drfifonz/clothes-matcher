@@ -64,12 +64,12 @@ class TrainTransforms:
 
             if resize_size:
                 transformation_list.append(transforms.Resize(resize_size))
-
-            transformation_list += [
-                # transforms.ToPILImage(),
-                transforms.RandomHorizontalFlip(),
-                transforms.RandomVerticalFlip(),
-            ]
+            # TODO UNCOMMENT IT LATER
+            # transformation_list += [
+            #     # transforms.ToPILImage(),
+            #     transforms.RandomHorizontalFlip(),
+            #     transforms.RandomVerticalFlip(),
+            # ]
             if not as_tensor:
                 transformation_list.append(transforms.ToTensor())
 
