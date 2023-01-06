@@ -6,8 +6,13 @@ class MetricModel(nn.Module):
     metric model class
     """
 
-    def __init__(self) -> None:
+    def __init__(self, base_model: nn.Module) -> None:
         super().__init__()
+        self.base_model = base_model
 
     def forward(self, data):
-        pass
+        """
+        forward funcion
+        """
+        # TODO forward function
+        return data

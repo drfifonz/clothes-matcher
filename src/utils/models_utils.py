@@ -33,6 +33,7 @@ class ModelUtils:
         """
         if pretrained:
             print(f"{cfg.TERMINAL_INFO}loading model with pretrained weigts.")
+            model = model(weights="DEFAULT")
         else:
             print(f"{cfg.TERMINAL_INFO} loading model {cfg.RED}without{cfg.RESET_COLOR} pretrained weigts.")
         if gradation:
@@ -40,7 +41,6 @@ class ModelUtils:
         else:
             print(f"{cfg.TERMINAL_INFO} Freezing all hiden layers.")
 
-        model = model(pretrained=True)
         for parameters in model.parameters():
             parameters.requires_grad = gradation
         return model
