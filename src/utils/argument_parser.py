@@ -9,7 +9,11 @@ def arguments_parser():
     """
     parser = argparse.ArgumentParser(description="Clothes matcher")
 
-    parser.add_argument("--type", type=str, default="train", help="[test/train]")
+    # parser.add_argument("-t", type=str, default="train", help="[test/train]")
+    parser.add_argument("--num_epochs", "--epochs", "-e", type=int, default=20, help="epochs")
+    parser.add_argument("--batch_size", "--batch", "-b", type=int, default=32, help="epochs")
+    parser.add_argument("--lr", type=float, default=0.0001, help="learning rate")
+    parser.add_argument("--model", type=str, default="resnet50", help="[resnet50/resnet34/resnet18]")
 
     return parser.parse_args()
 
