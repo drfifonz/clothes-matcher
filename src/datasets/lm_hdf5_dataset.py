@@ -56,7 +56,7 @@ class LandmarkHDF5Dataset(data.Dataset):
 
         return image, label[0], bbox
 
-    def __load_data(self) -> tuple[np.ndarray, np.ndarray, np.array]:
+    def __load_data(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         hdf5_file_path = self.__get_file_path()
         start_time = time.time()
         dataset = self.utils.read_hdf5_dataset_file(hdf5_file_path)
