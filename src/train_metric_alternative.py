@@ -1,7 +1,11 @@
 import os
+import logging
+import umap
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
+#from torch.utils.data import DataLoader
+import pytorch_metric_learning
+from pytorch_metric_learning.utils import logging_presets 
 from pytorch_metric_learning import losses, miners, samplers, testers, trainers
 from pytorch_metric_learning.utils import common_functions
 from torchvision.models import resnet50
@@ -12,6 +16,10 @@ import utils.config as cfg
 from models import Embedder
 from datasets import LandmarkHDF5Dataset
 from utils import ModelUtils, TrainTransforms
+
+
+logging.getLogger().setLevel(logging.INFO)
+
 
 INITIAL_LR = 1e-3
 NUM_EPOCHS = 20
@@ -45,13 +53,21 @@ val_dataset = LandmarkHDF5Dataset(
     measure_time=False,
 )
 
-train_dataloader = DataLoader(
-    dataset=train_dataset, shuffle=True, batch_size=BATCH_SIZE, num_workers=NUM_WORKERS, pin_memory=PIN_MEMORY
-)
+#train_dataloader = DataLoader(
+#     dataset=train_dataset,
+#     shuffle=True,
+#     batch_size=BATCH_SIZE, 
+#     num_workers=NUM_WORKERS, 
+#     pin_memory=PIN_MEMORY
+# )
 
-val_dataloader = DataLoader(
-    dataset=val_dataset, shuffle=True, batch_size=BATCH_SIZE, num_workers=NUM_WORKERS, pin_memory=PIN_MEMORY
-)
+#val_dataloader = DataLoader(
+#     dataset=val_dataset, 
+#     shuffle=True, 
+#     batch_size=BATCH_SIZE, 
+#     num_workers=NUM_WORKERS, 
+#     pin_memory=PIN_MEMORY
+# )
 
 trunk = resnet50(pretrained=True)
 trunk_output_size = trunk.fc.in_features
@@ -79,4 +95,31 @@ optimizers = {"trunk_optimizer": trunk_optimizer, "embedder_optimizer": embedder
 loss_fun = {"metric_loss": loss_fun}
 mining_fun = {"tuple_miner": miner_fun}
 
+
+# keeps records from training in given folders as csv files
+# pip install record-keeper, pip install tensorboard
+
+record_keeper, _, _ = logging_presets.get_record_keeper(
+    "clothes-matcher/data/training_logs", "clothes-matcher/data/training_tensorboards"
+    )
+
+hooks = logging_presets.get_hook_container(record_keeper)
+dataset_dict = {"val": val_dataset}
+saved_models_path = "clothes-matcher/data/saved_models"
+
+
+# creating tester, requires umap
+# conda install -c conda-forge umap-learn
+# umap requires:
+#  numpy=1.20 or earlier version!
+#  numba
+#  scikit-learn
+#  tqdm
+#  scipy
+
+tester = testers.GlobalEmbeddingSpaceTester(
+    end_of_testing_hook=hooks.end_of_testing_hook,
+    visualizer=umap.UMAP()
+)
+print("IM HERE")
 # TODO add hooks, a tester and a trainer
