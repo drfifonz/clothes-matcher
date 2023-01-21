@@ -1,22 +1,25 @@
-import os
 import logging
-import umap
+import os
+
+import numpy as np
+
+# from torch.utils.data import DataLoader
+import pytorch_metric_learning
 import torch
 import torch.nn as nn
-#from torch.utils.data import DataLoader
-import pytorch_metric_learning
-from pytorch_metric_learning.utils import logging_presets 
+import umap
 from pytorch_metric_learning import losses, miners, samplers, testers, trainers
-from pytorch_metric_learning.utils import common_functions
+from pytorch_metric_learning.utils import common_functions, logging_presets
 from torchvision.models import resnet50
 from tqdm import tqdm
-import wandb
 
 import utils.config as cfg
-from models import Embedder
+import wandb
 from datasets import LandmarkHDF5Dataset
+from models import Embedder
 from utils import ModelUtils, TrainTransforms
 
+print("IMPORTS DONE")
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -53,19 +56,20 @@ val_dataset = LandmarkHDF5Dataset(
     measure_time=False,
 )
 
-#train_dataloader = DataLoader(
+
+# train_dataloader = DataLoader(
 #     dataset=train_dataset,
 #     shuffle=True,
-#     batch_size=BATCH_SIZE, 
-#     num_workers=NUM_WORKERS, 
+#     batch_size=BATCH_SIZE,
+#     num_workers=NUM_WORKERS,
 #     pin_memory=PIN_MEMORY
 # )
 
-#val_dataloader = DataLoader(
-#     dataset=val_dataset, 
-#     shuffle=True, 
-#     batch_size=BATCH_SIZE, 
-#     num_workers=NUM_WORKERS, 
+# val_dataloader = DataLoader(
+#     dataset=val_dataset,
+#     shuffle=True,
+#     batch_size=BATCH_SIZE,
+#     num_workers=NUM_WORKERS,
 #     pin_memory=PIN_MEMORY
 # )
 
@@ -77,7 +81,7 @@ trunk = torch.nn.DataParallel(trunk.to(DEVICE))
 embedder = torch.nn.DataParallel(Embedder([trunk_output_size, 64]).to(DEVICE))
 
 # optimizers
-trunk_optimizer = torch.optim.Adam(trunk.parameters(), lr = INITIAL_LR, weight_decay=0.0001)
+trunk_optimizer = torch.optim.Adam(trunk.parameters(), lr=INITIAL_LR, weight_decay=0.0001)
 embedder_optimizer = torch.optim.Adam(embedder.parameters(), lr=INITIAL_LR, weight_decay=0.0001)
 
 # loss function
@@ -87,7 +91,9 @@ loss_fun = losses.TripletMarginLoss(margin=0.1)
 miner_fun = miners.MultiSimilarityMiner(epsilon=0.1)
 
 # dataloader sampler
-sampler = samplers.MPerClassSampler(labels=train_dataset.labels, m=4, length_before_new_iter=len(train_dataset))
+sampler = samplers.MPerClassSampler(
+    labels=np.squeeze(train_dataset.labels), m=4, length_before_new_iter=len(train_dataset)
+)
 
 
 models = {"trunk": trunk, "embedder": embedder}
@@ -101,25 +107,16 @@ mining_fun = {"tuple_miner": miner_fun}
 
 record_keeper, _, _ = logging_presets.get_record_keeper(
     "clothes-matcher/data/training_logs", "clothes-matcher/data/training_tensorboards"
-    )
+)
 
 hooks = logging_presets.get_hook_container(record_keeper)
 dataset_dict = {"val": val_dataset}
 saved_models_path = "clothes-matcher/data/saved_models"
 
 
-# creating tester, requires umap
-# conda install -c conda-forge umap-learn
-# umap requires:
-#  numpy=1.20 or earlier version!
-#  numba
-#  scikit-learn
-#  tqdm
-#  scipy
-
 tester = testers.GlobalEmbeddingSpaceTester(
     end_of_testing_hook=hooks.end_of_testing_hook,
-    visualizer=umap.UMAP()
+    visualizer=umap.UMAP(),
 )
 print("IM HERE")
 # TODO add hooks, a tester and a trainer
