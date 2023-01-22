@@ -10,6 +10,7 @@ import torch.nn as nn
 import umap
 from pytorch_metric_learning import losses, miners, samplers, testers, trainers
 from pytorch_metric_learning.utils import common_functions, logging_presets
+from pytorch_metric_learning.utils.accuracy_calculator import AccuracyCalculator
 from torchvision.models import resnet50
 from torchvision.models import ResNet50_Weights
 from tqdm import tqdm
@@ -18,7 +19,7 @@ import utils.config as cfg
 import wandb
 from datasets import LandmarkHDF5Dataset
 from models import Embedder
-from utils import ModelUtils, TrainTransforms
+from utils import ModelUtils, TrainTransforms, TrainUtils
 
 print("IMPORTS DONE")
 
@@ -124,6 +125,30 @@ saved_models_path = "data/saved_models"
 tester = testers.GlobalEmbeddingSpaceTester(
     end_of_testing_hook=hooks.end_of_testing_hook,
     visualizer=umap.UMAP(),
+    visualizer_hook=TrainUtils.get_visualizer_hook,
+    dataloader_num_workers=2,
+    accuracy_calculator=AccuracyCalculator(k="max_bin_count")
 )
-print("IM HERE")
-# TODO add hooks, a tester and a trainer
+
+end_of_epoch_hook = hooks.end_of_epoch_hook(tester, dataset_dict, saved_models_path, test_interval=1, patience=1)
+
+trainer = trainers.MetricLossOnly(
+    models,
+    optimizers,
+    BATCH_SIZE,
+    loss_fun,
+    mining_fun,
+    train_dataset,
+    sampler = sampler,
+    dataloader_num_workers=2,
+    end_of_iteration_hook=hooks.end_of_iteration_hook,
+    end_of_epoch_hook=end_of_epoch_hook
+)
+
+###################
+###### TRAIN ######
+###################
+
+print("BEGINNING TRAINING")
+trainer.train(num_epochs=NUM_EPOCHS)
+
