@@ -11,6 +11,7 @@ import umap
 from pytorch_metric_learning import losses, miners, samplers, testers, trainers
 from pytorch_metric_learning.utils import common_functions, logging_presets
 from torchvision.models import resnet50
+from torchvision.models import ResNet50_Weights
 from tqdm import tqdm
 
 import utils.config as cfg
@@ -72,8 +73,8 @@ val_dataset = LandmarkHDF5Dataset(
 #     num_workers=NUM_WORKERS,
 #     pin_memory=PIN_MEMORY
 # )
-
-trunk = resnet50(pretrained=True)
+# pretrained= True is deprecated!
+trunk = resnet50(weights=ResNet50_Weights.DEFAULT)
 trunk_output_size = trunk.fc.in_features
 trunk.fc = common_functions.Identity()
 trunk = torch.nn.DataParallel(trunk.to(DEVICE))
@@ -106,14 +107,20 @@ mining_fun = {"tuple_miner": miner_fun}
 # pip install record-keeper, pip install tensorboard
 
 record_keeper, _, _ = logging_presets.get_record_keeper(
-    "clothes-matcher/data/training_logs", "clothes-matcher/data/training_tensorboards"
+    "data/training_logs", "data/training_tensorboards"
 )
 
 hooks = logging_presets.get_hook_container(record_keeper)
 dataset_dict = {"val": val_dataset}
-saved_models_path = "clothes-matcher/data/saved_models"
+saved_models_path = "data/saved_models"
 
+# testers need faiss:
+# conda install -c pytorch faiss-cpu 
+# or conda install -c pytorch faiss-gpu (contains CPU and GPU support)
 
+# if the above fail, use conda-forge: 
+# conda install -c conda-forge faiss-cpu or
+# conda install -c conda-forge faiss-gpu
 tester = testers.GlobalEmbeddingSpaceTester(
     end_of_testing_hook=hooks.end_of_testing_hook,
     visualizer=umap.UMAP(),
