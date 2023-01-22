@@ -21,7 +21,6 @@ from datasets import LandmarkHDF5Dataset
 from models import Embedder
 from utils import ModelUtils, TrainTransforms, TrainUtils
 
-print("IMPORTS DONE")
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -44,6 +43,20 @@ NUM_WORKERS = os.cpu_count()
 
 tf_list = TrainTransforms(mean=MEAN, std=STD, as_hdf5=True)
 
+wandb.config = {
+    "learning_rate": INITIAL_LR,
+    "epochs": NUM_EPOCHS,
+    "batch_size": BATCH_SIZE,
+    "workers": NUM_WORKERS,
+    "gradation": GRADATION,
+    "pin_memory": PIN_MEMORY,
+    "mean": MEAN,
+    "std": STD,
+    "model": "metric_model",
+}
+
+wandb.init(project="clothes-matcher-metric", entity="drfifonz", config=wandb.config)
+
 
 train_dataset = LandmarkHDF5Dataset(
     root=cfg.HDF5_DIR_PATH,
@@ -59,21 +72,6 @@ val_dataset = LandmarkHDF5Dataset(
 )
 
 
-# train_dataloader = DataLoader(
-#     dataset=train_dataset,
-#     shuffle=True,
-#     batch_size=BATCH_SIZE,
-#     num_workers=NUM_WORKERS,
-#     pin_memory=PIN_MEMORY
-# )
-
-# val_dataloader = DataLoader(
-#     dataset=val_dataset,
-#     shuffle=True,
-#     batch_size=BATCH_SIZE,
-#     num_workers=NUM_WORKERS,
-#     pin_memory=PIN_MEMORY
-# )
 # pretrained= True is deprecated!
 trunk = resnet50(weights=ResNet50_Weights.DEFAULT)
 trunk_output_size = trunk.fc.in_features
@@ -115,6 +113,25 @@ hooks = logging_presets.get_hook_container(record_keeper)
 dataset_dict = {"val": val_dataset}
 saved_models_path = "data/saved_models"
 
+def hook_end_of_iteration(trainer_object: trainers.MetricLossOnly):
+    """
+    Logs accumulated losses throughout iteration
+    """
+    losses_sum = 0
+
+    for key, loss in trainer_object.losses.items():
+        losses_sum += loss
+    
+    wandb.log(
+        {
+        "iterational_train_loss": losses_sum
+        }
+    )
+    hooks.end_of_iteration_hook(trainer_object)
+
+
+
+
 # testers need faiss:
 # conda install -c pytorch faiss-cpu 
 # or conda install -c pytorch faiss-gpu (contains CPU and GPU support)
@@ -131,6 +148,9 @@ tester = testers.GlobalEmbeddingSpaceTester(
 )
 
 end_of_epoch_hook = hooks.end_of_epoch_hook(tester, dataset_dict, saved_models_path, test_interval=1, patience=1)
+
+
+wandb.watch((trunk, embedder))
 
 trainer = trainers.MetricLossOnly(
     models,
