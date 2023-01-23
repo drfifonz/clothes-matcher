@@ -14,6 +14,7 @@ def arguments_parser():
     parser.add_argument("--batch_size", "--batch", "-b", type=int, default=32, help="epochs")
     parser.add_argument("--lr", type=float, default=0.0001, help="learning rate")
     parser.add_argument("--model", type=str, default="resnet50", help="[resnet50/resnet34/resnet18]")
+    parser.add_argument("--l2", type=float, default=0.01, help="l2 penalization")
 
     return parser.parse_args()
 

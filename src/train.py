@@ -64,6 +64,7 @@ wandb.config = {
     "mean": MEAN,
     "std": STD,
     "model": resnet_core.__name__,
+    "l2": args.l2,
 }
 print(wandb.config)
 
@@ -125,7 +126,7 @@ if torch.cuda.is_available():
 classificator_loss_func = nn.CrossEntropyLoss()
 bbox_loss_func = nn.MSELoss()
 # optimizer initialization
-optimizer = torch.optim.Adam(params=detector_model.parameters(), lr=INITIAL_LR)
+optimizer = torch.optim.Adam(params=detector_model.parameters(), lr=INITIAL_LR, weight_decay=args.l2)
 
 progress = {"total_train_loss": [], "total_val_loss": [], "train_class_acc": [], "val_class_acc": []}
 
@@ -182,7 +183,9 @@ for epoch in tqdm(range(NUM_EPOCHS)):
             measured_time = it_time_end - it_time_start
             loading_time = it_time_end - loading_time_start
             print(
-                f"it: {batch_idx}\t time in it: {measured_time:.2f}\t loading time per it: {(loading_time/batch_idx):.2f}",
+                f"it: {batch_idx}\t time in it: {measured_time:.2f}",
+                f"loading time per it: {(loading_time/batch_idx):.2f}",
+                sep="\t",
                 end="\r",
             )
     if DEBUG_MODE:
@@ -240,7 +243,7 @@ for epoch in tqdm(range(NUM_EPOCHS)):
     #!MODEL TRAINGING INFO
 
     print("\n", cfg.TERMINAL_INFO, f"EPOCH {epoch+1}/{NUM_EPOCHS}")
-    print(f"TRAIN loss: {avg_train_loss:.6f}, accuracy {correct_train:.4f}")
+    print(f"TRAIN      loss: {avg_train_loss:.6f}, accuracy {correct_train:.4f}")
     print(f"VALIDATION loss: {avg_val_loss:.6f}, accuracy {correct_val:.4f}")
 
 print(cfg.TERMINAL_INFO, "saving model")
