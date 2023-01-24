@@ -44,7 +44,7 @@ class LandmarkHDF5Dataset(data.Dataset):
         index = idx % self.images.shape[0]
         # TODO add transforms to image
         # image = self.transforms(self.images[index])
-        img: np.ndarray = self.images[index]
+        img = self.images[index]
 
         img = img.reshape(3, 200, 200).astype("float32")
         # img = np.array([img[2], img[0], img[1]]).astype("float32")

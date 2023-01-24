@@ -22,7 +22,7 @@ LM_IMGS_DIR_PATH_05_TENSORS = "img_0.5_tensors"
 HDF5_TRAIN_FILE_PATH = "data/datasets/Deepfashion_Landmark/img_hdf5/images_train.h5"
 HDF5_DIR_PATH = "data/datasets/Deepfashion_Landmark/img_hdf5"
 
-SAVE_MODEL_PATH = "data/results"
+RESULTS_PATH = "data/results"
 
 # terminal output colors
 RED = "\033[31m"

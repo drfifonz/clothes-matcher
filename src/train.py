@@ -247,4 +247,4 @@ for epoch in tqdm(range(NUM_EPOCHS)):
     print(f"VALIDATION loss: {avg_val_loss:.6f}, accuracy {correct_val:.4f}")
 
 print(cfg.TERMINAL_INFO, "saving model")
-torch.save(detector_model, os.path.join(cfg.SAVE_MODEL_PATH, f"detector_model_{wandb.run.name}.path"))
+torch.save(detector_model, os.path.join(cfg.RESULTS_PATH, f"detector_model_{wandb.run.name}.path"))
