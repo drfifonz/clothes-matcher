@@ -18,9 +18,17 @@ def webhook():
     """
     basic webhoor for GET requesst
     """
+    """
+    basic webhoor for GET requesst
+    """
     return "200"
 
 @app.route("/", methods=["POST"])
+def receive_post_image():
+    """
+    receive by POST request image in json format
+    """
+
 def receive_post_image():
     """
     receive by POST request image in json format
@@ -39,9 +47,12 @@ def receive_post_image():
 
         response_status = 200
     except TypeError:
+    except TypeError:
         if request.is_json:
             payload = request.json
             try:
+                img_value = payload[IMAGE_KEY]
+            except TypeError:
                 img_value = payload[IMAGE_KEY]
             except TypeError:
                 img_value  = None
@@ -49,6 +60,7 @@ def receive_post_image():
         response_messages = {"is_json": request.is_json,
                              "img_value_type": str(type(img_value)),
                              "img_value": str(img_value)}
+        response_status = 400
         response_status = 400
 
     return app.response_class(
