@@ -29,12 +29,13 @@ class LandmarkHDF5Dataset(data.Dataset):
         running_mode: str,
         transforms_list: list = None,
         measure_time: bool = False,
+        is_metric: bool = False,
     ) -> None:
         self.root = Path(root)
         self.running_mode = running_mode
         self.transforms = transforms_list
         self.measure_time = measure_time
-
+        self.is_metric = is_metric
         self.utils = LandmarkUtils(cfg.LANDMARK_DATASET_PATH)
 
         self.images, self.labels, self.bboxes = self.__load_data()
@@ -43,7 +44,7 @@ class LandmarkHDF5Dataset(data.Dataset):
         index = idx % self.images.shape[0]
         # TODO add transforms to image
         # image = self.transforms(self.images[index])
-        img: np.ndarray = self.images[index]
+        img = self.images[index]
 
         img = img.reshape(3, 200, 200).astype("float32")
         # img = np.array([img[2], img[0], img[1]]).astype("float32")
@@ -53,8 +54,14 @@ class LandmarkHDF5Dataset(data.Dataset):
         #! Labels are numbered in range 1-3, loss func except range 0 - (N-1)
 
         bbox = torch.from_numpy(self.bboxes[index]).type(torch.int64)
+        # temp = "JEST GIT " if not self.is_metric else "cos nie tak"
 
-        return image, label[0], bbox
+        # print(self.is_metric)
+        res = (image, label[0], bbox) if not self.is_metric else (image, label[0])
+        # res = "(image, label[0], bbox)" if not self.is_metric else "(image, label)"
+        # print(len(res))
+        return res
+        # return image, label[0], bbox
 
     def __load_data(self) -> tuple[np.ndarray, np.ndarray, np.array]:
         hdf5_file_path = self.__get_file_path()

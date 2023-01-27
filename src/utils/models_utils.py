@@ -1,8 +1,10 @@
 import os
 import torch
 from torchvision.transforms import transforms
-
+import torch.nn as nn
 import utils.config as cfg
+from pytorch_metric_learning import testers
+import torch.utils.data.dataset as Dataset
 
 
 class ModelUtils:
@@ -24,7 +26,7 @@ class ModelUtils:
                 "optimizer_state_dict": optimizer.state_dict(),
                 "loss": criterion,
             },
-            os.path.join(cfg.SAVE_MODEL_PATH, f"model_e{epochs+1}.pth"),
+            os.path.join(cfg.RESULTS_PATH, f"model_e{epochs+1}.pth"),
         )
 
     def build_model(self, model, pretrained: bool = True, gradation: bool = True):
@@ -33,6 +35,7 @@ class ModelUtils:
         """
         if pretrained:
             print(f"{cfg.TERMINAL_INFO}loading model with pretrained weigts.")
+            model = model(weights="DEFAULT")
         else:
             print(f"{cfg.TERMINAL_INFO} loading model {cfg.RED}without{cfg.RESET_COLOR} pretrained weigts.")
         if gradation:
@@ -40,10 +43,17 @@ class ModelUtils:
         else:
             print(f"{cfg.TERMINAL_INFO} Freezing all hiden layers.")
 
-        model = model(pretrained=True)
         for parameters in model.parameters():
             parameters.requires_grad = gradation
         return model
+
+    def get_all_embeddings(self, dataset, model: nn.Module, device):
+        tester = testers.BaseTester(data_device=device)
+        # return tester.get_all_embeddings(dataset, model.to(device))
+        res = tester.get_all_embeddings(dataset, model.to(device), return_as_numpy=False)
+        del tester
+        return res
+        # return tester.get_all_embeddings(dataset, model.to(device), return_as_numpy=False)
 
 
 class TrainTransforms:

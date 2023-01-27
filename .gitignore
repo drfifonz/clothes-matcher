@@ -5,3 +5,4 @@ data/*
 src/test/*
 .env
 wandb/*
+!src/test/singe_image.py

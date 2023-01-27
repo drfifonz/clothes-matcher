@@ -4,7 +4,7 @@ import time
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from torchvision.models import resnet50
+from torchvision.models import resnet50, resnet34, resnet18
 from tqdm import tqdm
 import wandb
 
@@ -13,7 +13,10 @@ from datasets.landmark_dataset import LandmarkDataset
 from datasets.lm_hdf5_dataset import LandmarkHDF5Dataset
 from models.detection_model import BboxDetectionModel
 from utils.models_utils import ModelUtils, TrainTransforms
+from utils.argument_parser import arguments_parser
 
+
+args = arguments_parser()
 
 # MEAN, STD and RESIZE_SIZE declaration
 MEAN = [0.485, 0.456, 0.406]
@@ -22,9 +25,9 @@ RESIZE_SIZE = (200, 200)
 BBOX_WEIGHT = 1.0
 LABEL_WEIGHT = 1.0
 
-INITIAL_LR = 1e-4
-NUM_EPOCHS = 20
-BATCH_SIZE = 32
+INITIAL_LR = args.lr
+NUM_EPOCHS = args.num_epochs
+BATCH_SIZE = args.batch_size
 
 NUM_WORKERS = 8
 # NUM_WORKERS = os.cpu_count()
@@ -42,6 +45,14 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 PIN_MEMORY = True if DEVICE == "cuda" else False  # to speed up loading data on CPU to training it on GPU
 # see https://discuss.pytorch.org/t/when-to-set-pin-memory-to-true/19723
 
+# TODO move resnet_core to modelutils
+if args.model == "resnet18":
+    resnet_core = resnet18
+elif args.model == "resnet34":
+    resnet_core = resnet34
+elif args.model == "resnet50":
+    resnet_core = resnet50
+
 
 wandb.config = {
     "learning_rate": INITIAL_LR,
@@ -52,9 +63,13 @@ wandb.config = {
     "pin_memory": PIN_MEMORY,
     "mean": MEAN,
     "std": STD,
+    "model": resnet_core.__name__,
+    "l2": args.l2,
 }
+print(wandb.config)
 
-wandb.init(project="clothes-matcher", entity="drfifonz", config=wandb.config)
+# wandb.init(project="clothes-matcher", entity="drfifonz", config=wandb.config)
+wandb.init(project="clothes-matcher-detection", entity="drfifonz", config=wandb.config)
 
 
 tf_list = TrainTransforms(mean=MEAN, std=STD, as_hdf5=True)
@@ -97,7 +112,9 @@ val_steps = len(val_dataset) // BATCH_SIZE
 
 print(cfg.TERMINAL_INFO, f"Train photos:{len(train_dataset)}\tVal photos: {len(val_dataset)}")
 resnet_utils = ModelUtils()
-resnet_model = resnet_utils.build_model(model=resnet50, pretrained=True, gradation=GRADATION)
+
+
+resnet_model = resnet_utils.build_model(model=resnet_core, pretrained=True, gradation=GRADATION)
 
 # creating object dedector model
 detector_model = BboxDetectionModel(resnet_model, 3)
@@ -109,7 +126,7 @@ if torch.cuda.is_available():
 classificator_loss_func = nn.CrossEntropyLoss()
 bbox_loss_func = nn.MSELoss()
 # optimizer initialization
-optimizer = torch.optim.Adam(params=detector_model.parameters(), lr=INITIAL_LR)
+optimizer = torch.optim.Adam(params=detector_model.parameters(), lr=INITIAL_LR, weight_decay=args.l2)
 
 progress = {"total_train_loss": [], "total_val_loss": [], "train_class_acc": [], "val_class_acc": []}
 
@@ -166,7 +183,9 @@ for epoch in tqdm(range(NUM_EPOCHS)):
             measured_time = it_time_end - it_time_start
             loading_time = it_time_end - loading_time_start
             print(
-                f"it: {batch_idx}\t time in it: {measured_time:.2f}\t loading time per it: {(loading_time/batch_idx):.2f}",
+                f"it: {batch_idx}\t time in it: {measured_time:.2f}",
+                f"loading time per it: {(loading_time/batch_idx):.2f}",
+                sep="\t",
                 end="\r",
             )
     if DEBUG_MODE:
@@ -224,8 +243,8 @@ for epoch in tqdm(range(NUM_EPOCHS)):
     #!MODEL TRAINGING INFO
 
     print("\n", cfg.TERMINAL_INFO, f"EPOCH {epoch+1}/{NUM_EPOCHS}")
-    print(f"TRAIN loss: {avg_train_loss:.6f}, accuracy {correct_train:.4f}")
+    print(f"TRAIN      loss: {avg_train_loss:.6f}, accuracy {correct_train:.4f}")
     print(f"VALIDATION loss: {avg_val_loss:.6f}, accuracy {correct_val:.4f}")
 
 print(cfg.TERMINAL_INFO, "saving model")
-torch.save(detector_model, os.path.join(cfg.SAVE_MODEL_PATH, f"detector_model_{wandb.run.name}.path"))
+torch.save(detector_model, os.path.join(cfg.RESULTS_PATH, f"detector_model_{wandb.run.name}.path"))
