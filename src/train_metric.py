@@ -132,7 +132,7 @@ for epoch in tqdm(range(NUM_EPOCHS)):
         embeddings = model(image)
         hard_pairs = miner(embeddings, label)
 
-        loss = loss_func(embeddings, label)
+        loss = loss_func(embeddings, label, hard_pairs)
         loss.backward()
         optimizer.step()
         if batch_idx % LOG_INTERVAL == 0:
