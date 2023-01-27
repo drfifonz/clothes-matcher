@@ -15,11 +15,11 @@ from utils.server_utils import ServerUtils
 
 URL = "http://localhost:5000/"
 
-NUM_RESULTS = 5
+NUM_RESULTS = 10
 
 server_utils = ServerUtils()
 
-with open("data/temp/image.jpg", "rb") as image_file:
+with open("data/temp/tshirt_200.jpg", "rb") as image_file:
     encoded_image = base64.b64encode(image_file.read())
     # print(type(encoded_image))
     # print(*encoded_image)

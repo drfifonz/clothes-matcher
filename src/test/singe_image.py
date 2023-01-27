@@ -21,7 +21,7 @@ MEAN = [0.485, 0.456, 0.406]
 STD = [0.229, 0.224, 0.225]
 
 
-def do_the_same(pil_img):
+def convert_pil_to_tensor(pil_img):
     image_array = np.asarray(pil_img)
     print("im arr:", image_array.shape)
     image_array = np.expand_dims(image_array, axis=0)
@@ -37,9 +37,9 @@ def do_the_same(pil_img):
 tf_list = TrainTransforms(mean=MEAN, std=STD, as_hdf5=True)
 
 
-def convert_image(tensor_image):
+def image_tensor_to_numpy(tensor_image):
     print(1111111111111111111)
-    print(tensor_image.shape)
+    # print(tensor_image.shape)
     # print(tensor_image.shape)
     tensor_image = tensor_image.reshape(tensor_image.shape[1], tensor_image.shape[2], tensor_image.shape[0])
     return (tensor_image.numpy()).astype(np.uint8)
@@ -54,13 +54,13 @@ def imshow(img, figsize=(8, 4)):
 
 print("dataset")
 
-train_dataset = LandmarkHDF5Dataset(
-    root=cfg.HDF5_DIR_PATH,
-    running_mode="train",
-    transforms_list=tf_list,
-    measure_time=False,
-    is_metric=True,
-)
+# train_dataset = LandmarkHDF5Dataset(
+#     root=cfg.HDF5_DIR_PATH,
+#     running_mode="train",
+#     transforms_list=tf_list,
+#     measure_time=False,
+#     is_metric=True,
+# )
 
 print("dataset loaded")
 # im_path = "data/temp/garniak.jpg"
@@ -71,9 +71,12 @@ im_type = 2
 img_type = torch.tensor(im_type)
 #####################################
 
-input_image_tensor = do_the_same(image)
-input_im_array = convert_image(input_image_tensor)
+input_image_tensor = convert_pil_to_tensor(image)
+input_im_array = image_tensor_to_numpy(input_image_tensor)
 
+# temp = Image.fromarray(image_tensor_to_numpy(input_image_tensor))
+# temp.show()
+# raise
 #####################################
 model_path = "data/results/golden-laughter-3/model/metric-golden-laughter-3-e9.path"
 device = torch.device("cuda")

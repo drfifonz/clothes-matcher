@@ -20,14 +20,14 @@ from models import MetricModel
 from utils import ModelUtils, TrainTransforms, TrainUtils
 
 INITIAL_LR = 1e-3
-NUM_EPOCHS = 10
+NUM_EPOCHS = 20
 BATCH_SIZE = 24
 
 MEAN = [0.485, 0.456, 0.406]
 STD = [0.229, 0.224, 0.225]
 
 IMAGE_SIZE = 128
-SAVE_FREQ = 1
+SAVE_FREQ = 2
 
 EMBEDDING_SIZE = 100
 GRADATION = True
