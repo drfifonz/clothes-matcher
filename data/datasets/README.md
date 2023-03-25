@@ -10,14 +10,16 @@ You have to download datasets manualy.
 
 ---
 
-Datasets
-----
+# Datasets
 
-All used dataset are part of [DeepFasion](http://mmlab.ie.cuhk.edu.hk/projects/DeepFashion.html) database.
+## All used dataset are part of [DeepFasion](http://mmlab.ie.cuhk.edu.hk/projects/DeepFashion.html) database.
 
-
-Fashion Landmark Detection Benchmark
 ---
+
+## Fashion Landmark Detection Benchmark
+
+Dataset consist of over 123 000 photos and it is splitted for train/val/test categories.</br> 
+For project purpose there was used only labels information with 3 labels defined by upper-body-clothes, full-body-clothes and lower-body-clothes.
 ### File Organization
 ```
 data/datasets/Deepfashion_Landmark
@@ -39,7 +41,7 @@ data/datasets/Deepfashion_Landmark
 
 
 
-### To be added. 
+
 
 --- 
 
