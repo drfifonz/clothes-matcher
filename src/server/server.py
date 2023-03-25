@@ -32,7 +32,7 @@ tf_list = TrainTransforms(mean=MEAN, std=STD, as_hdf5=True)
 
 train_dataset = LandmarkHDF5Dataset(
     root=cfg.HDF5_DIR_PATH,
-    running_mode="train",
+    running_mode="val",
     transforms_list=tf_list,
     measure_time=True,
     is_metric=True,
@@ -88,8 +88,12 @@ def receive_post_image():
 
         np_response_images = [server_util.image_tensor_to_numpy(im) for im in nearest_imgs]
         pil_response_images = [server_util.image_numpy_to_pil(im) for im in np_response_images]
-        server_util.combine_images(pil_response_images,show_image=True) # shows randomly selected images
+        server_util.combine_images(pil_response_images,show_image=False) # shows randomly selected images
+        # for i in pil_response_images:
+            # print(type(i))
         bytes_response_images = [server_util.image_pil_to_base64(image) for image in pil_response_images]
+        # print(bytes_response_images)
+
         list_of_nested_dics =[{"image":image} for image in bytes_response_images]
 
 

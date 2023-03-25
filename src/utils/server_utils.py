@@ -27,7 +27,7 @@ class ServerUtils:
         Converts a PIL Image to base64 string
         """
         buffer = io.BytesIO()
-        # image.save(buffer, format=image.format)
+        image.save(buffer, format="JPEG")
         buffer = buffer.getvalue()
         return base64.b64encode(buffer).decode("utf-8")
 

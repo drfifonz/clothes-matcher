@@ -15,7 +15,7 @@ from utils.server_utils import ServerUtils
 
 URL = "http://localhost:5000/"
 
-NUM_RESULTS = 10
+NUM_RESULTS = 3
 
 server_utils = ServerUtils()
 
@@ -47,3 +47,6 @@ req = requests.post(url=URL, data=json.dumps(data), headers=headers, timeout=100
 # res = json.loads(resp_message)
 # print(json.dumps(res, indent=4), req.status_code)
 print(req.status_code)
+resp_message = req.content.decode("utf-8")
+images = json.loads(resp_message)
+print(images)
