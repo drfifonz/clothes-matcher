@@ -2,6 +2,7 @@
 __pycache__
 data/*
 !data/datasets
+!data/plots
 src/test/*
 .env
 wandb/*
