@@ -54,13 +54,13 @@ def imshow(img, figsize=(8, 4)):
 
 print("dataset")
 
-# train_dataset = LandmarkHDF5Dataset(
-#     root=cfg.HDF5_DIR_PATH,
-#     running_mode="train",
-#     transforms_list=tf_list,
-#     measure_time=False,
-#     is_metric=True,
-# )
+train_dataset = LandmarkHDF5Dataset(
+    root=cfg.HDF5_DIR_PATH,
+    running_mode="train",
+    transforms_list=tf_list,
+    measure_time=False,
+    is_metric=True,
+)
 
 print("dataset loaded")
 # im_path = "data/temp/garniak.jpg"

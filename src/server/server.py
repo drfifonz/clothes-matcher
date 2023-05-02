@@ -32,7 +32,7 @@ tf_list = TrainTransforms(mean=MEAN, std=STD, as_hdf5=True)
 
 train_dataset = LandmarkHDF5Dataset(
     root=cfg.HDF5_DIR_PATH,
-    running_mode="val",
+    running_mode="train",
     transforms_list=tf_list,
     measure_time=True,
     is_metric=True,

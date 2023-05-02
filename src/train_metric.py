@@ -11,7 +11,7 @@ from pytorch_metric_learning import distances, losses, miners
 
 # import torch.nn as nn
 from torch.utils.data import DataLoader
-from torchvision.models import resnet50
+from torchvision.models import resnet50, resnet34, resnet18
 from tqdm import tqdm
 
 import utils.config as cfg
@@ -26,6 +26,8 @@ BATCH_SIZE = 24
 MEAN = [0.485, 0.456, 0.406]
 STD = [0.229, 0.224, 0.225]
 
+WEIGHT_L2 = 0
+TYPE_OF_TRIPLETS = "hard"
 IMAGE_SIZE = 128
 SAVE_FREQ = 2
 
@@ -75,7 +77,7 @@ print(cfg.TERMINAL_INFO, f"Train photos:{len(train_dataset)}\tVal photos: {len(v
 
 model_utils = ModelUtils()
 
-resnet_model = model_utils.build_model(model=resnet50)
+resnet_model = model_utils.build_model(model=resnet34)
 
 model = (
     MetricModel(resnet_model, embedding_size=EMBEDDING_SIZE).cuda()
@@ -85,10 +87,10 @@ model = (
 
 distance = distances.CosineSimilarity()
 
-miner = miners.TripletMarginMiner(margin=0.2, distance=distance, type_of_triplets="semihard")
+miner = miners.TripletMarginMiner(margin=0.2, distance=distance, type_of_triplets=TYPE_OF_TRIPLETS)
 # miner = miners.MultiSimilarityMiner()
 loss_func = losses.TripletMarginLoss()
-optimizer = torch.optim.Adam(params=model.parameters(), lr=INITIAL_LR)
+optimizer = torch.optim.Adam(params=model.parameters(), lr=INITIAL_LR, weight_decay=WEIGHT_L2)
 
 print(f"{cfg.TERMINAL_INFO} initializing {cfg.RED}wandb{cfg.RESET_COLOR}")
 
@@ -104,6 +106,9 @@ wandb.config = {
     "embedding_size": EMBEDDING_SIZE,
     "miner": miner._get_name(),
     "distance": distance._get_name(),
+    "l2": WEIGHT_L2,
+    "type_of_triplets": TYPE_OF_TRIPLETS,
+    "resnet": "resnet34",
 }
 
 wandb.init(project="clothes-matcher-metric-temp", entity="drfifonz", config=wandb.config)
